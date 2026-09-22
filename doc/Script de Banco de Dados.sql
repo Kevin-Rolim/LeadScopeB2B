@@ -67,8 +67,6 @@ CREATE TABLE Pessoas (
     email VARCHAR(150),
     telefone VARCHAR(20),
     url_linkedin VARCHAR(255),
-    url_instagram VARCHAR(255),
-    url_x VARCHAR(255),
     status VARCHAR(50),
     origem VARCHAR(100),
     data_coleta DATETIME2 DEFAULT SYSDATETIME(),
@@ -190,7 +188,6 @@ CREATE TABLE Exportacoes (
     qntd_itens INT,
     data_hora DATETIME2 DEFAULT SYSDATETIME(),
     usuario_id INT NOT NULL,
-    conjunto_filtros_id INT NOT NULL,
     CONSTRAINT FK_Exportacoes_Usuarios
         FOREIGN KEY (usuario_id)
         REFERENCES Usuarios(id)

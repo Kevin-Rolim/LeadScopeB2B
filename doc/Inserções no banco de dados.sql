@@ -59,17 +59,14 @@ consultoria técnica específica');
 GO
 
 INSERT INTO Pessoas (nome, email, telefone, url_linkedin,
-url_instagram, url_x, status, origem)
+status, origem)
 VALUES
 ('Carlos Eduardo', 'carlos.eduardo@email.com', '(17) 99999-1234',
-'linkedin.com/in/carloseduardo', NULL, NULL, 'Qualificado',
-'LinkedIn'),
+'linkedin.com/in/carloseduardo', 'Qualificado', 'LinkedIn'),
 ('Marina Lima', 'marina.lima@email.com', '(17) 98888-5678',
-'linkedin.com/in/marinalima', 'instagram.com/marinalima', NULL, 'Novo',
-'Site Corporativo'), 
+'linkedin.com/in/marinalima', 'Novo', 'Site Corporativo'), 
 ('Rafael Costa', 'rafael.costa@email.com', '(11) 97777-4321',
-'linkedin.com/in/rafaelcosta', NULL, '@rafaelcosta', 'Em análise',
-'Base Interna CRM');
+'linkedin.com/in/rafaelcosta', 'Em análise', 'Base Interna CRM');
 GO
 
 INSERT INTO Empresas (razao_social, nome_fantasia, cnpj, site,
@@ -154,9 +151,9 @@ GO
 
 INSERT INTO Exportacoes (qntd_itens, usuario_id)
 VALUES
-(1, 1, 1),
-(2, 2, 2),
-(3, 3, 3);
+(1, 1),
+(2, 2),
+(3, 3);
 GO
 
 INSERT INTO Exportacoes_Pessoas_Empresas (exportacao_id, pessoa_id,
