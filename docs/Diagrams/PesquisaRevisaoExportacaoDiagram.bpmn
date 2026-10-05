@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Defs_Process_02" targetNamespace="https://leadscope.local/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.31.0">
+  <bpmn:process id="Process_02" name="Pesquisa, Revisão e Exportação" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Process_02">
+      <bpmn:lane id="Lane_Reviewer" name="Revisor">
+        <bpmn:flowNodeRef>Task_Analisa</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="LeadScope B2B">
+        <bpmn:flowNodeRef>Task_Consulta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegRev</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CriaExp</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Arquivo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Log2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_02</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_User" name="Usuário">
+        <bpmn:flowNodeRef>Start_02</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Criterios</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Seleciona</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Rev</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SolicExp</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_02" name="Iniciar pesquisa" />
+    <bpmn:userTask id="Task_Criterios" name="Informar critérios de pesquisa">
+      <bpmn:incoming>G01</bpmn:incoming>
+      <bpmn:outgoing>G02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_Consulta" name="Consultar Empresas, Pessoas, vínculos, CNAEs e dados complementares">
+      <bpmn:incoming>G02</bpmn:incoming>
+      <bpmn:outgoing>G03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_Analisa" name="Analisar vínculo / lead e evidências">
+      <bpmn:incoming>G05</bpmn:incoming>
+      <bpmn:outgoing>G06</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_Seleciona" name="Selecionar leads Pessoa-Empresa">
+      <bpmn:incoming>G03</bpmn:incoming>
+      <bpmn:outgoing>G04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Rev" name="Revisão necessária?" />
+    <bpmn:serviceTask id="Task_RegRev" name="Registrar REVISOES e atualizar status quando aplicável">
+      <bpmn:incoming>G06</bpmn:incoming>
+      <bpmn:outgoing>G07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_SolicExp" name="Solicitar exportação">
+      <bpmn:incoming>G07</bpmn:incoming>
+      <bpmn:incoming>G08</bpmn:incoming>
+      <bpmn:outgoing>G09</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_CriaExp" name="Criar EXPORTACOES e associar pares selecionados">
+      <bpmn:incoming>G09</bpmn:incoming>
+      <bpmn:outgoing>G10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Arquivo" name="Gerar arquivo">
+      <bpmn:incoming>G10</bpmn:incoming>
+      <bpmn:outgoing>G11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Log2" name="Registrar operação em LOGS">
+      <bpmn:incoming>G11</bpmn:incoming>
+      <bpmn:outgoing>G12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_02" name="Exportação concluída" />
+    <bpmn:sequenceFlow id="G01" sourceRef="Start_02" targetRef="Task_Criterios" />
+    <bpmn:sequenceFlow id="G02" sourceRef="Task_Criterios" targetRef="Task_Consulta" />
+    <bpmn:sequenceFlow id="G03" sourceRef="Task_Consulta" targetRef="Task_Seleciona" />
+    <bpmn:sequenceFlow id="G05" name="Sim" sourceRef="Gateway_Rev" targetRef="Task_Analisa" />
+    <bpmn:sequenceFlow id="G06" sourceRef="Task_Analisa" targetRef="Task_RegRev" />
+    <bpmn:sequenceFlow id="G04" sourceRef="Task_Seleciona" targetRef="Gateway_Rev" />
+    <bpmn:sequenceFlow id="G08" name="Não" sourceRef="Gateway_Rev" targetRef="Task_SolicExp" />
+    <bpmn:sequenceFlow id="G07" sourceRef="Task_RegRev" targetRef="Task_SolicExp" />
+    <bpmn:sequenceFlow id="G09" sourceRef="Task_SolicExp" targetRef="Task_CriaExp" />
+    <bpmn:sequenceFlow id="G10" sourceRef="Task_CriaExp" targetRef="Task_Arquivo" />
+    <bpmn:sequenceFlow id="G11" sourceRef="Task_Arquivo" targetRef="Task_Log2" />
+    <bpmn:sequenceFlow id="G12" sourceRef="Task_Log2" targetRef="End_02" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collab_Process_02">
+    <bpmn:participant id="Participant_Process_02" name="LeadScope B2B — Pesquisa, Revisão e Exportação" processRef="Process_02" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_Process_02">
+    <bpmndi:BPMNPlane id="Plane_Process_02" bpmnElement="Collab_Process_02">
+      <bpmndi:BPMNShape id="Participant_Process_02_di" bpmnElement="Participant_Process_02" isHorizontal="true">
+        <dc:Bounds x="150" y="60" width="2180" height="720" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Reviewer_di" bpmnElement="Lane_Reviewer" isHorizontal="true">
+        <dc:Bounds x="180" y="540" width="2150" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="180" y="300" width="2150" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_User_di" bpmnElement="Lane_User" isHorizontal="true">
+        <dc:Bounds x="180" y="60" width="2150" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_02_di" bpmnElement="Start_02">
+        <dc:Bounds x="222" y="135" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="202" y="171" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1g29n17_di" bpmnElement="Task_Criterios">
+        <dc:Bounds x="300" y="115" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10619nz_di" bpmnElement="Task_Consulta">
+        <dc:Bounds x="520" y="345" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0a5qa1n_di" bpmnElement="Task_Analisa">
+        <dc:Bounds x="1005" y="552" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hpqqm5_di" bpmnElement="Task_Seleciona">
+        <dc:Bounds x="810" y="115" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Rev_di" bpmnElement="Gateway_Rev" isMarkerVisible="true">
+        <dc:Bounds x="1030" y="133" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1025" y="95.5" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0qea1kg_di" bpmnElement="Task_RegRev">
+        <dc:Bounds x="1245" y="335" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0w6b2xz_di" bpmnElement="Task_SolicExp">
+        <dc:Bounds x="1540" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0bpmztu_di" bpmnElement="Task_CriaExp">
+        <dc:Bounds x="1760" y="335" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0nrggl5_di" bpmnElement="Task_Arquivo">
+        <dc:Bounds x="1940" y="335" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0vdg8fo_di" bpmnElement="Task_Log2">
+        <dc:Bounds x="2120" y="335" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_02_di" bpmnElement="End_02">
+        <dc:Bounds x="2252" y="355" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2242" y="391" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="G01_di" bpmnElement="G01">
+        <di:waypoint x="258" y="153" />
+        <di:waypoint x="300" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G02_di" bpmnElement="G02">
+        <di:waypoint x="400" y="153" />
+        <di:waypoint x="490" y="153" />
+        <di:waypoint x="490" y="385" />
+        <di:waypoint x="520" y="385" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G03_di" bpmnElement="G03">
+        <di:waypoint x="620" y="385" />
+        <di:waypoint x="780" y="385" />
+        <di:waypoint x="780" y="153" />
+        <di:waypoint x="810" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G04_di" bpmnElement="G04">
+        <di:waypoint x="910" y="157" />
+        <di:waypoint x="1031" y="157" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G05_di" bpmnElement="G05">
+        <di:waypoint x="1055" y="183" />
+        <di:waypoint x="1055" y="552" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1070" y="183" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G06_di" bpmnElement="G06">
+        <di:waypoint x="1105" y="592" />
+        <di:waypoint x="1295" y="592" />
+        <di:waypoint x="1295" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G07_di" bpmnElement="G07">
+        <di:waypoint x="1345" y="375" />
+        <di:waypoint x="1620" y="375" />
+        <di:waypoint x="1620" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G08_di" bpmnElement="G08">
+        <di:waypoint x="1080" y="158" />
+        <di:waypoint x="1540" y="158" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1109" y="133" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G09_di" bpmnElement="G09">
+        <di:waypoint x="1640" y="158" />
+        <di:waypoint x="1810" y="158" />
+        <di:waypoint x="1810" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G10_di" bpmnElement="G10">
+        <di:waypoint x="1860" y="375" />
+        <di:waypoint x="1940" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G11_di" bpmnElement="G11">
+        <di:waypoint x="2040" y="373" />
+        <di:waypoint x="2120" y="373" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="G12_di" bpmnElement="G12">
+        <di:waypoint x="2220" y="373" />
+        <di:waypoint x="2252" y="373" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

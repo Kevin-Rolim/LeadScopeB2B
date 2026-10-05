@@ -1,0 +1,35 @@
+CNAEs (numero, descricao)
+
+Conjuntos_permissoes (id, nome, descricao)
+
+Perfis_acesso (id, nome, #conjunto_permissoes_id)
+
+Fontes_dados (id, nome, tipo, url, confiabilidade, data_hora_mod,
+data_hora_del)
+
+Usuarios (id, nome, email, senha, #perfil_acesso_id)
+
+Exportacoes (id, qntd_itens, data_hora, #usuario_id)
+
+Logs (id, tipo_evento, desc_evento, data_hora, dados_alt, #usuario_id)
+
+Pessoas (id, nome, email, telefone, url_linkedin,
+status, origem, data_coleta, data_bloqueio, data_del)
+
+Empresas (id, razao_social, nome_fantasia, cnpj, site, segmento, porte,
+cidade, estado, email, telefone, status, data_criacao,
+data_atualizacao)
+
+Dados_coletados (id, campo, valor, nivel_confianca, #fonte_dados_id,
+#pessoa_id, #empresa_id)
+
+CNAEs_Empresas (#cnae_numero, #empresa_id)
+
+Pessoas_Empresas (#pessoa_id, #empresa_id, cargo, departamento,
+senioridade, status_vinculo, status_lead, data_revisao,
+nivel_confianca, fonte_vinculo, data_verificacao)
+
+Revisoes (id, decisao, comentario, data_hora, #usuario_id, #{pessoa_id,
+empresa_id})
+
+Exportacoes_Pessoas_Empresas (#exportacao_id, #{pessoa_id, empresa_id})

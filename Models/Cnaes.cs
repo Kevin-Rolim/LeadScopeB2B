@@ -1,5 +1,5 @@
-public class Cnae
+public class Cnaes
 {
-    public string Numero { get; set; } = string.Empty;
+    public int Numero { get; set; }
     public string Descricao { get; set; } = string.Empty;
 }
