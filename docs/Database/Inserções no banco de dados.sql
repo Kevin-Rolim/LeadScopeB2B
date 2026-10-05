@@ -5,14 +5,14 @@ GO
 -- 1. DADOS BASE
 -- =========================================================
 
-INSERT INTO Conjuntos_permissoes (nome, descricao)
+INSERT INTO ConjuntoPermissoes (Nome, Descricao)
 VALUES
 ('Admin', 'Acesso total ao sistema'),
 ('Gestor', 'Acesso a dashboards, filtros e revisão de leads'),
 ('Leitura', 'Acesso somente leitura');
 GO
 
-INSERT INTO Fontes_dados (nome, tipo, url, confiabilidade)
+INSERT INTO FonteDados (Nome, Tipo, Url, Confiabilidade)
 VALUES
 ('LinkedIn API', 'API', 'https://linkedin.com', 95.50),
 ('Scraper Site Corporativo', 'Web Scraping', 'https://exemplo.com',
@@ -20,14 +20,14 @@ VALUES
 ('Base Interna CRM', 'Banco Interno', NULL, 99.00);
 GO
 
-INSERT INTO Perfis_acesso (nome, conjunto_permissoes_id)
+INSERT INTO PerfisAcesso (Nome, ConjuntoPermissoesId)
 VALUES
 ('Administrador Geral', 1),
 ('Gestor Comercial', 2),
 ('Analista Comercial', 3);
 GO
 
-INSERT INTO Usuarios (nome, email, senha, perfil_acesso_id)
+INSERT INTO Usuarios (Nome, Email, Senha, PerfilAcessoId)
 VALUES
 ('Guilherme Santos', 'guilherme@leadscope.com',
 'senhaCriptografada123', 1),
@@ -36,7 +36,7 @@ VALUES
 ('Ana Souza', 'ana@leadscope.com', 'senhaCriptografada789', 3);
 GO
 
-INSERT INTO Logs (tipo_evento, desc_evento, dados_alt, usuario_id)
+INSERT INTO Logs (TiporEvento, DescricaoEvento, DadosAlterados, UsuarioId)
 VALUES
 ('Criação de Conta', 'Usuário administrador inicial criado.', NULL, 1),
 ('Login', 'Usuário acessou o sistema com sucesso.', NULL, 2),
@@ -48,7 +48,7 @@ GO
 -- 2. ENTIDADES PRINCIPAIS
 -- =========================================================
 
-INSERT INTO CNAEs (numero, descricao)
+INSERT INTO Cnaes (Numero, Descricao)
 VALUES
 ('6201-5/01', 'Desenvolvimento de programas de computador sob
 encomenda'),
@@ -58,19 +58,19 @@ e hospedagem na internet'),
 consultoria técnica específica');
 GO
 
-INSERT INTO Pessoas (nome, email, telefone, url_linkedin,
-status, origem)
+INSERT INTO Pessoas (Nome, Email, Telefone, UrlLinkedin,
+Status, Origem)
 VALUES
 ('Carlos Eduardo', 'carlos.eduardo@email.com', '(17) 99999-1234',
 'linkedin.com/in/carloseduardo', 'Qualificado', 'LinkedIn'),
 ('Marina Lima', 'marina.lima@email.com', '(17) 98888-5678',
-'linkedin.com/in/marinalima', 'Novo', 'Site Corporativo'), 
+'linkedin.com/in/marinalima', 'Novo', 'Site Corporativo'),
 ('Rafael Costa', 'rafael.costa@email.com', '(11) 97777-4321',
 'linkedin.com/in/rafaelcosta', 'Em análise', 'Base Interna CRM');
 GO
 
-INSERT INTO Empresas (razao_social, nome_fantasia, cnpj, site,
-segmento, porte, cidade, estado, email, telefone, status)
+INSERT INTO Empresas (RazaoSocial, NomeFantasia, Cnpj, UrlSite,
+Segmento, Porte, Cidade, Estado, Email, Telefone, Status)
 VALUES
 ('Tech Soluções Inovadoras LTDA', 'Tech Soluções',
 '12.345.678/0001-99', 'www.techsolucoes.com.br', 'Tecnologia da
@@ -89,8 +89,8 @@ GO
 -- 3. DADOS COLETADOS
 -- =========================================================
 
-INSERT INTO Dados_coletados (campo, valor, nivel_confianca,
-fonte_dados_id, pessoa_id, empresa_id)
+INSERT INTO DadosColetados (Campo, Valor, NivelConfianca,
+FonteDadosID, PessoaId, EmpresaId)
 VALUES
 
 ('email', 'carlos.eduardo@email.com', 98.00, 1, 1, NULL),
@@ -108,26 +108,26 @@ GO
 -- 4. RELACIONAMENTOS N:N
 -- =========================================================
 
-INSERT INTO CNAEs_Empresas (cnae_numero, empresa_id)
+INSERT INTO CnaesEmpresas (CnaeNumero, EmpresaId)
 VALUES
 ('6201-5/01', 1),
 ('6311-9/00', 2),
 ('7020-4/00', 3);
 GO
 
-INSERT INTO Pessoas_Empresas
+INSERT INTO PessoasEmpresas
 (
-pessoa_id,
-empresa_id,
-cargo,
-departamento,
-senioridade,
-status_vinculo,
-status_lead,
-data_revisao,
-nivel_confianca,
-fonte_vinculo,
-data_verificacao
+PessoaId,
+EmpresaId,
+Cargo,
+Departamento,
+Senioridade,
+StatusVinculo,
+StatusLead,
+DataRevisao,
+NivelConfianca,
+FonteVinculo,
+DataVerif
 )
 VALUES
 (1, 1, 'Gerente de TI', 'Tecnologia', 'Sênior', 'Ativo', 'Aprovado',
@@ -138,8 +138,8 @@ SYSDATETIME(), 90.00, 'Site Corporativo', SYSDATETIME()),
 'Aprovado', SYSDATETIME(), 93.00, 'Base Interna CRM', SYSDATETIME());
 GO
 
-INSERT INTO Revisoes (decisao, comentario, usuario_id, pessoa_id,
-empresa_id)
+INSERT INTO Revisoes (Decisao, Comentario, UsuarioId, PessoaId,
+EmpresaId)
 VALUES
 ('Aprovado', 'Vínculo validado manualmente e com boa confiabilidade.',
 1, 1, 1),
@@ -149,15 +149,15 @@ aparente.', 2, 2, 2),
 3, 3, 3);
 GO
 
-INSERT INTO Exportacoes (qntd_itens, usuario_id)
+INSERT INTO Exportacoes (QtdItens, UsuarioId)
 VALUES
 (1, 1),
 (2, 2),
 (3, 3);
 GO
 
-INSERT INTO Exportacoes_Pessoas_Empresas (exportacao_id, pessoa_id,
-empresa_id)
+INSERT INTO ExportacoesPessoasEmpresas (ExportacoesId, PessoaId,
+EmpresaId)
 VALUES
 (1, 1, 1),
 (2, 1, 1),

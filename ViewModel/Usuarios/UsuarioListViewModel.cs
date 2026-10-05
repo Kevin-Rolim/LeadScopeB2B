@@ -1,3 +1,4 @@
+namespace LeadScopeB2B.ViewModels.Usuarios;
 public class UsuarioListViewModel
 {
     public string Nome { get; set; } = string.Empty;

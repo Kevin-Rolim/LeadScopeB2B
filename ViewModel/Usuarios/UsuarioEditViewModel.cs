@@ -1,3 +1,4 @@
+namespace LeadScopeB2B.ViewModels.Usuarios;
 public class UsuarioEditViewModel
 {
     public int Id { get; set; }
