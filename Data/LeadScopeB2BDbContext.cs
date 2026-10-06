@@ -14,6 +14,8 @@ public class LeadScopeB2BDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        MapearTabelasEColunas(modelBuilder);
+
         modelBuilder.Entity<CnaesEmpresas>()
             .HasKey(ce => new { ce.CnaeNumero, ce.EmpresaId });
         modelBuilder.Entity<CnaesEmpresas>()
@@ -65,9 +67,9 @@ public class LeadScopeB2BDbContext : DbContext
             .WithMany()
             .HasForeignKey(dc => dc.EmpresaId);
         modelBuilder.Entity<DadosColetados>()
-            .ToTable(table => table.HasCheckConstraint(
+            .ToTable("Dados_coletados", table => table.HasCheckConstraint(
                 "CK_DadosColetados_EntidadeDestino",
-                "([PessoaId] IS NOT NULL AND [EmpresaId] IS NULL) OR ([PessoaId] IS NULL AND [EmpresaId] IS NOT NULL)"));
+                "([pessoa_id] IS NOT NULL AND [empresa_id] IS NULL) OR ([pessoa_id] IS NULL AND [empresa_id] IS NOT NULL)"));
 
         modelBuilder.Entity<PerfisAcesso>()
             .HasOne(p => p.ConjuntoPermissoes)
@@ -97,13 +99,172 @@ public class LeadScopeB2BDbContext : DbContext
         modelBuilder.Entity<Usuarios>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<Empresas>().HasIndex(e => e.Cnpj).IsUnique();
 
-        modelBuilder.Entity<FonteDados>().Property(f => f.DataHoraMod).HasDefaultValueSql("SYSDATETIME()");
-        modelBuilder.Entity<Pessoas>().Property(p => p.DataColeta).HasDefaultValueSql("SYSDATETIME()");
-        modelBuilder.Entity<Empresas>().Property(e => e.DataCriacao).HasDefaultValueSql("SYSDATETIME()");
-        modelBuilder.Entity<Empresas>().Property(e => e.DataAtualizacao).HasDefaultValueSql("SYSDATETIME()");
-        modelBuilder.Entity<Logs>().Property(l => l.DataHora).HasDefaultValueSql("SYSDATETIME()");
-        modelBuilder.Entity<Revisoes>().Property(r => r.DataHora).HasDefaultValueSql("SYSDATETIME()");
-        modelBuilder.Entity<Exportacoes>().Property(e => e.DataHora).HasDefaultValueSql("SYSDATETIME()");
+        modelBuilder.Entity<FonteDados>().Property(f => f.DataHoraMod).HasDefaultValueSql("SYSUTCDATETIME()");
+        modelBuilder.Entity<Pessoas>().Property(p => p.DataColeta).HasDefaultValueSql("SYSUTCDATETIME()");
+        modelBuilder.Entity<Pessoas>().Property(p => p.Status).HasDefaultValue("PENDENTE");
+        modelBuilder.Entity<Empresas>().Property(e => e.DataCriacao).HasDefaultValueSql("SYSUTCDATETIME()");
+        modelBuilder.Entity<Empresas>().Property(e => e.DataAtualizacao).HasDefaultValueSql("SYSUTCDATETIME()");
+        modelBuilder.Entity<Empresas>().Property(e => e.Status).HasDefaultValue("PENDENTE");
+        modelBuilder.Entity<Logs>().Property(l => l.DataHora).HasDefaultValueSql("SYSUTCDATETIME()");
+        modelBuilder.Entity<Revisoes>().Property(r => r.DataHora).HasDefaultValueSql("SYSUTCDATETIME()");
+        modelBuilder.Entity<Exportacoes>().Property(e => e.DataHora).HasDefaultValueSql("SYSUTCDATETIME()");
+    }
+
+    private static void MapearTabelasEColunas(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Cnaes>(entity =>
+        {
+            entity.ToTable("CNAEs");
+            entity.Property(e => e.Numero).HasColumnName("numero");
+            entity.Property(e => e.Descricao).HasColumnName("descricao");
+        });
+
+        modelBuilder.Entity<CnaesEmpresas>(entity =>
+        {
+            entity.ToTable("CNAEs_Empresas");
+            entity.Property(e => e.CnaeNumero).HasColumnName("cnae_numero");
+            entity.Property(e => e.EmpresaId).HasColumnName("empresa_id");
+        });
+
+        modelBuilder.Entity<ConjuntoPermissoes>(entity =>
+        {
+            entity.ToTable("Conjuntos_permissoes");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nome).HasColumnName("nome");
+            entity.Property(e => e.Descricao).HasColumnName("descricao");
+        });
+
+        modelBuilder.Entity<DadosColetados>(entity =>
+        {
+            entity.ToTable("Dados_coletados");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Campo).HasColumnName("campo");
+            entity.Property(e => e.Valor).HasColumnName("valor");
+            entity.Property(e => e.NivelConfianca).HasColumnName("nivel_confianca");
+            entity.Property(e => e.FonteDadosID).HasColumnName("fonte_dados_id");
+            entity.Property(e => e.PessoaId).HasColumnName("pessoa_id");
+            entity.Property(e => e.EmpresaId).HasColumnName("empresa_id");
+        });
+
+        modelBuilder.Entity<Empresas>(entity =>
+        {
+            entity.ToTable("Empresas");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.RazaoSocial).HasColumnName("razao_social");
+            entity.Property(e => e.NomeFantasia).HasColumnName("nome_fantasia");
+            entity.Property(e => e.Cnpj).HasColumnName("cnpj");
+            entity.Property(e => e.UrlSite).HasColumnName("site");
+            entity.Property(e => e.Segmento).HasColumnName("segmento");
+            entity.Property(e => e.Porte).HasColumnName("porte");
+            entity.Property(e => e.Cidade).HasColumnName("cidade");
+            entity.Property(e => e.Estado).HasColumnName("estado");
+            entity.Property(e => e.Email).HasColumnName("email_institucional");
+            entity.Property(e => e.Telefone).HasColumnName("telefone_comercial");
+            entity.Property(e => e.Status).HasColumnName("status_validacao");
+            entity.Property(e => e.DataCriacao).HasColumnName("data_criacao");
+            entity.Property(e => e.DataAtualizacao).HasColumnName("data_atualizacao");
+        });
+
+        modelBuilder.Entity<Exportacoes>(entity =>
+        {
+            entity.ToTable("Exportacoes");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.QtdItens).HasColumnName("qntd_itens");
+            entity.Property(e => e.DataHora).HasColumnName("data_hora");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+        });
+
+        modelBuilder.Entity<ExportacoesPessoasEmpresas>(entity =>
+        {
+            entity.ToTable("Exportacoes_Pessoas_Empresas");
+            entity.Property(e => e.ExportacoesId).HasColumnName("exportacao_id");
+            entity.Property(e => e.PessoaId).HasColumnName("pessoa_id");
+            entity.Property(e => e.EmpresaId).HasColumnName("empresa_id");
+        });
+
+        modelBuilder.Entity<FonteDados>(entity =>
+        {
+            entity.ToTable("Fontes_dados");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nome).HasColumnName("nome");
+            entity.Property(e => e.Tipo).HasColumnName("tipo");
+            entity.Property(e => e.Url).HasColumnName("url");
+            entity.Property(e => e.Confiabilidade).HasColumnName("confiabilidade");
+            entity.Property(e => e.DataHoraMod).HasColumnName("data_hora_mod");
+            entity.Property(e => e.DataHoraDel).HasColumnName("data_hora_del");
+        });
+
+        modelBuilder.Entity<Logs>(entity =>
+        {
+            entity.ToTable("Logs");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.TiporEvento).HasColumnName("tipo_evento");
+            entity.Property(e => e.DescricaoEvento).HasColumnName("desc_evento");
+            entity.Property(e => e.DataHora).HasColumnName("data_hora");
+            entity.Property(e => e.DadosAlterados).HasColumnName("dados_alt");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+        });
+
+        modelBuilder.Entity<PerfisAcesso>(entity =>
+        {
+            entity.ToTable("Perfis_acesso");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nome).HasColumnName("nome");
+            entity.Property(e => e.ConjuntoPermissoesId).HasColumnName("conjunto_permissoes_id");
+        });
+
+        modelBuilder.Entity<Pessoas>(entity =>
+        {
+            entity.ToTable("Pessoas");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nome).HasColumnName("nome");
+            entity.Property(e => e.Email).HasColumnName("email_profissional");
+            entity.Property(e => e.Telefone).HasColumnName("telefone_comercial");
+            entity.Property(e => e.UrlLinkedin).HasColumnName("url_perfil_profissional");
+            entity.Property(e => e.Status).HasColumnName("status_validacao");
+            entity.Property(e => e.Origem).HasColumnName("origem");
+            entity.Property(e => e.DataColeta).HasColumnName("data_coleta");
+            entity.Property(e => e.DataBloqueio).HasColumnName("data_bloqueio");
+            entity.Property(e => e.DataDel).HasColumnName("data_del");
+        });
+
+        modelBuilder.Entity<PessoasEmpresas>(entity =>
+        {
+            entity.ToTable("Pessoas_Empresas");
+            entity.Property(e => e.PessoaId).HasColumnName("pessoa_id");
+            entity.Property(e => e.EmpresaId).HasColumnName("empresa_id");
+            entity.Property(e => e.Cargo).HasColumnName("cargo");
+            entity.Property(e => e.Departamento).HasColumnName("departamento");
+            entity.Property(e => e.Senioridade).HasColumnName("senioridade");
+            entity.Property(e => e.StatusVinculo).HasColumnName("status_vinculo");
+            entity.Property(e => e.StatusLead).HasColumnName("status_lead");
+            entity.Property(e => e.DataRevisao).HasColumnName("data_revisao");
+            entity.Property(e => e.NivelConfianca).HasColumnName("nivel_confianca");
+            entity.Property(e => e.FonteVinculo).HasColumnName("fonte_vinculo");
+            entity.Property(e => e.DataVerif).HasColumnName("data_verificacao");
+        });
+
+        modelBuilder.Entity<Revisoes>(entity =>
+        {
+            entity.ToTable("Revisoes");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Decisao).HasColumnName("decisao");
+            entity.Property(e => e.Comentario).HasColumnName("comentario");
+            entity.Property(e => e.DataHora).HasColumnName("data_hora");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+            entity.Property(e => e.PessoaId).HasColumnName("pessoa_id");
+            entity.Property(e => e.EmpresaId).HasColumnName("empresa_id");
+        });
+
+        modelBuilder.Entity<Usuarios>(entity =>
+        {
+            entity.ToTable("Usuarios");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nome).HasColumnName("nome");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.Senha).HasColumnName("senha_hash");
+            entity.Property(e => e.PerfilAcessoId).HasColumnName("perfil_acesso_id");
+        });
     }
 
     public DbSet<Cnaes> Cnaes { get; set; } = null!;

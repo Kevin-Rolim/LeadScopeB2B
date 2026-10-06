@@ -1,0 +1,14 @@
+@model PessoaDetailsViewModel
+@{
+    ViewData["Title"] = "Remover pessoa";
+}
+
+<h1 class="h3">Remover pessoa</h1>
+<div class="alert alert-warning">
+    Confirma a remoção de <strong>@Model.Nome</strong>? O registro será desativado e não aparecerá mais nas listagens.
+</div>
+
+<form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+    <button type="submit" class="btn btn-danger">Confirmar remoção</button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancelar</a>
+</form>

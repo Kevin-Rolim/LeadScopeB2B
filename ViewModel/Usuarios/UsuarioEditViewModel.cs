@@ -1,9 +1,29 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace LeadScopeB2B.ViewModels.Usuarios;
+
 public class UsuarioEditViewModel
 {
     public int Id { get; set; }
+
+    [Required(ErrorMessage = "Informe o nome.")]
+    [StringLength(100)]
     public string Nome { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Informe o e-mail.")]
+    [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
+    [StringLength(150)]
+    [Display(Name = "E-mail")]
     public string Email { get; set; } = string.Empty;
+
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "A nova senha deve ter entre 6 e 100 caracteres.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Nova senha")]
+    public string? NovaSenha { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Selecione um perfil de acesso.")]
+    [Display(Name = "Perfil de acesso")]
     public int PerfilAcessoId { get; set; }
-    public PerfisAcesso? PerfisAcesso { get; set; }
+
+    public IReadOnlyList<PerfisAcesso> PerfisDisponiveis { get; set; } = [];
 }

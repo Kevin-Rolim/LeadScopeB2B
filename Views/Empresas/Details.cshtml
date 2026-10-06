@@ -1,0 +1,22 @@
+@model EmpresaDetailsViewModel
+@{
+    ViewData["Title"] = "Detalhes da empresa";
+}
+
+<h1 class="h3">@(Model.NomeFantasia ?? Model.RazaoSocial)</h1>
+<p class="text-muted">@Model.RazaoSocial</p>
+
+<dl class="row card card-body">
+    <dt class="col-sm-3">CNPJ</dt><dd class="col-sm-9">@(Model.Cnpj ?? "—")</dd>
+    <dt class="col-sm-3">Segmento</dt><dd class="col-sm-9">@(Model.Segmento ?? "—")</dd>
+    <dt class="col-sm-3">Porte</dt><dd class="col-sm-9">@(Model.Porte ?? "—")</dd>
+    <dt class="col-sm-3">Localidade</dt><dd class="col-sm-9">@Model.Cidade @Model.Estado</dd>
+    <dt class="col-sm-3">E-mail</dt><dd class="col-sm-9">@(Model.Email ?? "—")</dd>
+    <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9">@(Model.Telefone ?? "—")</dd>
+    <dt class="col-sm-3">Site</dt><dd class="col-sm-9">@(Model.UrlSite ?? "—")</dd>
+    <dt class="col-sm-3">Status</dt><dd class="col-sm-9">@(Model.Status ?? "—")</dd>
+    <dt class="col-sm-3">Atualizada em</dt><dd class="col-sm-9">@Model.DataAtualizacao.ToString("dd/MM/yyyy HH:mm")</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+<a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>

@@ -1,0 +1,60 @@
+@model IReadOnlyList<PessoaListViewModel>
+@{
+    ViewData["Title"] = "Pessoas";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Pessoas</h1>
+        <p class="text-muted mb-0">Contatos disponíveis para prospecção.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Nova pessoa</a>
+</div>
+
+@if (TempData["Sucesso"] is string mensagem)
+{
+    <div class="alert alert-success">@mensagem</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Contato</th>
+                <th>Origem</th>
+                <th>Status</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var pessoa in Model)
+        {
+            <tr>
+                <td>@pessoa.Nome</td>
+                <td>
+                    <div>@(pessoa.Email ?? "—")</div>
+                    <div class="small text-muted">@pessoa.Telefone</div>
+                </td>
+                <td>@(pessoa.Origem ?? "—")</td>
+                <td>
+                    @(pessoa.Status ?? "—")
+                    @if (pessoa.Bloqueada)
+                    {
+                        <span class="badge text-bg-warning">Bloqueada</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@pessoa.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
+                    <a asp-action="Edit" asp-route-id="@pessoa.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">Nenhuma pessoa cadastrada.</p>
+}

@@ -1,0 +1,90 @@
+@model LeadFormViewModel
+@{
+    var edicao = ViewData["Edicao"] as bool? ?? false;
+}
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="PessoaId" class="form-label"></label>
+        @if (edicao)
+        {
+            <input asp-for="PessoaId" type="hidden" />
+            <select asp-for="PessoaId" class="form-select" disabled>
+                @foreach (var pessoa in Model.PessoasDisponiveis)
+                {
+                    <option value="@pessoa.Id">@pessoa.Nome</option>
+                }
+            </select>
+        }
+        else
+        {
+            <select asp-for="PessoaId" class="form-select">
+                <option value="0">Selecione</option>
+                @foreach (var pessoa in Model.PessoasDisponiveis)
+                {
+                    <option value="@pessoa.Id">@pessoa.Nome</option>
+                }
+            </select>
+        }
+        <span asp-validation-for="PessoaId" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="EmpresaId" class="form-label"></label>
+        @if (edicao)
+        {
+            <input asp-for="EmpresaId" type="hidden" />
+            <select asp-for="EmpresaId" class="form-select" disabled>
+                @foreach (var empresa in Model.EmpresasDisponiveis)
+                {
+                    <option value="@empresa.Id">@(empresa.NomeFantasia ?? empresa.RazaoSocial)</option>
+                }
+            </select>
+        }
+        else
+        {
+            <select asp-for="EmpresaId" class="form-select">
+                <option value="0">Selecione</option>
+                @foreach (var empresa in Model.EmpresasDisponiveis)
+                {
+                    <option value="@empresa.Id">@(empresa.NomeFantasia ?? empresa.RazaoSocial)</option>
+                }
+            </select>
+        }
+        <span asp-validation-for="EmpresaId" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Cargo" class="form-label"></label>
+        <input asp-for="Cargo" class="form-control" />
+        <span asp-validation-for="Cargo" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Departamento" class="form-label"></label>
+        <input asp-for="Departamento" class="form-control" />
+        <span asp-validation-for="Departamento" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Senioridade" class="form-label"></label>
+        <input asp-for="Senioridade" class="form-control" />
+        <span asp-validation-for="Senioridade" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="StatusVinculo" class="form-label"></label>
+        <input asp-for="StatusVinculo" class="form-control" />
+        <span asp-validation-for="StatusVinculo" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="StatusLead" class="form-label"></label>
+        <input asp-for="StatusLead" class="form-control" />
+        <span asp-validation-for="StatusLead" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="NivelConfianca" class="form-label"></label>
+        <input asp-for="NivelConfianca" class="form-control" />
+        <span asp-validation-for="NivelConfianca" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="FonteVinculo" class="form-label"></label>
+        <input asp-for="FonteVinculo" class="form-control" />
+        <span asp-validation-for="FonteVinculo" class="text-danger"></span>
+    </div>
+</div>
