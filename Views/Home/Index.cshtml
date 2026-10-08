@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Início";
+}
+
+<div class="py-4">
+    <h1 class="display-6">LeadScope B2B</h1>
+    <p class="lead text-muted">Organize empresas, contatos e os vínculos que formam sua base de leads.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Leads</h2>
+                <p class="text-muted">Consulte e qualifique vínculos entre pessoas e empresas.</p>
+                <a asp-controller="Leads" asp-action="Index" class="btn btn-primary">Acessar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Empresas</h2>
+                <p class="text-muted">Mantenha os dados das organizações prospectadas.</p>
+                <a asp-controller="Empresas" asp-action="Index" class="btn btn-outline-primary">Acessar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Pessoas</h2>
+                <p class="text-muted">Gerencie contatos, origem e situação de bloqueio.</p>
+                <a asp-controller="Pessoas" asp-action="Index" class="btn btn-outline-primary">Acessar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Usuários</h2>
+                <p class="text-muted">Cadastre usuários e associe perfis de acesso.</p>
+                <a asp-controller="Usuarios" asp-action="Index" class="btn btn-outline-primary">Acessar</a>
+            </div>
+        </div>
+    </div>
+</div>

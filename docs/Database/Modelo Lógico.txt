@@ -1,0 +1,35 @@
+Cnaes (Numero, Descricao)
+
+ConjuntoPermissoes (Id, Nome, Descricao)
+
+PerfisAcesso (Id, Nome, #ConjuntoPermissoesId)
+
+FonteDados (Id, Nome, Tipo, Url, Confiabilidade, DataHoraMod,
+DataHoraDel)
+
+Usuarios (Id, Nome, Email, Senha, #PerfilAcessoId)
+
+Exportacoes (Id, QtdItens, DataHora, #UsuarioId)
+
+Logs (Id, TiporEvento, DescricaoEvento, DataHora, DadosAlterados, #UsuarioId)
+
+Pessoas (Id, Nome, Email, Telefone, UrlLinkedin,
+Status, Origem, DataColeta, DataBloqueio, DataDel)
+
+Empresas (Id, RazaoSocial, NomeFantasia, Cnpj, UrlSite, Segmento, Porte,
+Cidade, Estado, Email, Telefone, Status, DataCriacao,
+DataAtualizacao)
+
+DadosColetados (Id, Campo, Valor, NivelConfianca, #FonteDadosID,
+#PessoaId, #EmpresaId)
+
+CnaesEmpresas (#CnaeNumero, #EmpresaId)
+
+PessoasEmpresas (#PessoaId, #EmpresaId, Cargo, Departamento,
+Senioridade, StatusVinculo, StatusLead, DataRevisao,
+NivelConfianca, FonteVinculo, DataVerif)
+
+Revisoes (Id, Decisao, Comentario, DataHora, #UsuarioId, #{PessoaId,
+EmpresaId})
+
+ExportacoesPessoasEmpresas (#ExportacoesId, #{PessoaId, EmpresaId})

@@ -1,0 +1,59 @@
+@model EmpresaFormViewModel
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="RazaoSocial" class="form-label"></label>
+        <input asp-for="RazaoSocial" class="form-control" />
+        <span asp-validation-for="RazaoSocial" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="NomeFantasia" class="form-label"></label>
+        <input asp-for="NomeFantasia" class="form-control" />
+        <span asp-validation-for="NomeFantasia" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Cnpj" class="form-label"></label>
+        <input asp-for="Cnpj" class="form-control" />
+        <span asp-validation-for="Cnpj" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Segmento" class="form-label"></label>
+        <input asp-for="Segmento" class="form-control" />
+        <span asp-validation-for="Segmento" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Porte" class="form-label"></label>
+        <input asp-for="Porte" class="form-control" />
+        <span asp-validation-for="Porte" class="text-danger"></span>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="UrlSite" class="form-label"></label>
+        <input asp-for="UrlSite" class="form-control" />
+        <span asp-validation-for="UrlSite" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Status" class="form-label"></label>
+        <input asp-for="Status" class="form-control" />
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="Cidade" class="form-label"></label>
+        <input asp-for="Cidade" class="form-control" />
+        <span asp-validation-for="Cidade" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Estado" class="form-label"></label>
+        <input asp-for="Estado" class="form-control" maxlength="2" />
+        <span asp-validation-for="Estado" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Telefone" class="form-label"></label>
+        <input asp-for="Telefone" class="form-control" />
+        <span asp-validation-for="Telefone" class="text-danger"></span>
+    </div>
+</div>

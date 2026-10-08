@@ -1,0 +1,59 @@
+@model IReadOnlyList<EmpresaListViewModel>
+@{
+    ViewData["Title"] = "Empresas";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Empresas</h1>
+        <p class="text-muted mb-0">Base de organizações prospectadas.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Nova empresa</a>
+</div>
+
+@if (TempData["Sucesso"] is string mensagem)
+{
+    <div class="alert alert-success">@mensagem</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Empresa</th>
+                <th>CNPJ</th>
+                <th>Segmento</th>
+                <th>Localidade</th>
+                <th>Status</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var empresa in Model)
+        {
+            <tr>
+                <td>
+                    <strong>@(empresa.NomeFantasia ?? empresa.RazaoSocial)</strong>
+                    @if (!string.IsNullOrWhiteSpace(empresa.NomeFantasia))
+                    {
+                        <div class="small text-muted">@empresa.RazaoSocial</div>
+                    }
+                </td>
+                <td>@(empresa.Cnpj ?? "—")</td>
+                <td>@(empresa.Segmento ?? "—")</td>
+                <td>@(string.Join("/", new[] { empresa.Cidade, empresa.Estado }.Where(x => !string.IsNullOrWhiteSpace(x))))</td>
+                <td>@(empresa.Status ?? "—")</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@empresa.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
+                    <a asp-action="Edit" asp-route-id="@empresa.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">Nenhuma empresa cadastrada.</p>
+}

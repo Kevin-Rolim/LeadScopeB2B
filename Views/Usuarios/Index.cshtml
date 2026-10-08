@@ -1,0 +1,49 @@
+@model IReadOnlyList<UsuarioListViewModel>
+@{
+    ViewData["Title"] = "Usuários";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Usuários</h1>
+        <p class="text-muted mb-0">Gerencie as pessoas que acessam o LeadScope.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Novo usuário</a>
+</div>
+
+@if (TempData["Sucesso"] is string mensagem)
+{
+    <div class="alert alert-success">@mensagem</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfil</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var usuario in Model)
+        {
+            <tr>
+                <td>@usuario.Nome</td>
+                <td>@usuario.Email</td>
+                <td>@usuario.PerfilAcesso</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
+                    <a asp-action="Edit" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">Nenhum usuário cadastrado.</p>
+}

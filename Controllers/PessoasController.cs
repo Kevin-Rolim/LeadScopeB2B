@@ -1,126 +1,117 @@
+using LeadScopeB2B.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using LeadScopeB2B.Data;
-using LeadScopeB2B.Models;
 
 namespace LeadScopeB2B.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class PessoasController : ControllerBase
+public class PessoasController : Controller
 {
-    private readonly LeadScopeDbContext _context;
+    private readonly PessoaService _service;
 
-    public PessoasController(LeadScopeDbContext context)
+    public PessoasController(PessoaService service)
     {
-        _context = context;
+        _service = service;
     }
 
-    // GET: api/pessoas?status=...&origem=...&termo=...
+    public async Task<IActionResult> Index()
+    {
+        return View(await _service.ListarAsync());
+    }
+
+    public async Task<IActionResult> Details(int id)
+    {
+        var pessoa = await _service.ObterDetalhesAsync(id);
+        return pessoa is null ? NotFound() : View(pessoa);
+    }
+
     [HttpGet]
-    public async Task<IActionResult> Listar(
-        [FromQuery] string? status,
-        [FromQuery] string? origem,
-        [FromQuery] string? termo)
+    public IActionResult Create()
     {
-        var query = _context.Pessoas
-            .Where(p => p.DataDel == null) // Apenas não deletados
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(status))
-            query = query.Where(p => p.Status == status);
-
-        if (!string.IsNullOrWhiteSpace(origem))
-            query = query.Where(p => p.Origem == origem);
-
-        if (!string.IsNullOrWhiteSpace(termo))
-            query = query.Where(p => p.Nome.Contains(termo) || (p.Email != null && p.Email.Contains(termo)));
-
-        var pessoas = await query.ToListAsync();
-        return Ok(pessoas);
+        return View(new PessoaFormViewModel());
     }
 
-    // GET: api/pessoas/5
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> ObterPorId(int id)
-    {
-        var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == id && p.DataDel == null);
-        if (pessoa == null)
-            return NotFound(new { mensagem = "Contato não encontrado ou excluído." });
-
-        return Ok(pessoa);
-    }
-
-    // POST: api/pessoas
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] Pessoas pessoa)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(PessoaFormViewModel model)
     {
-        pessoa.DataColeta = DateTime.UtcNow;
-        pessoa.DataBloqueio = null;
-        pessoa.DataDel = null;
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
 
-        _context.Pessoas.Add(pessoa);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(ObterPorId), new { id = pessoa.Id }, pessoa);
+        await _service.CadastrarAsync(model);
+        TempData["Sucesso"] = "Pessoa cadastrada com sucesso.";
+        return RedirectToAction(nameof(Index));
     }
 
-    // PUT: api/pessoas/5
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Atualizar(int id, [FromBody] Pessoas pessoaAtualizada)
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
     {
-        var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == id && p.DataDel == null);
-        if (pessoa == null)
-            return NotFound(new { mensagem = "Contato não encontrado." });
-
-        pessoa.Nome = pessoaAtualizada.Nome;
-        pessoa.Email = pessoaAtualizada.Email;
-        pessoa.Telefone = pessoaAtualizada.Telefone;
-        pessoa.UrlLinkedin = pessoaAtualizada.UrlLinkedin;
-        pessoa.Status = pessoaAtualizada.Status;
-        pessoa.Origem = pessoaAtualizada.Origem;
-
-        await _context.SaveChangesAsync();
-        return NoContent();
+        var pessoa = await _service.ObterParaEdicaoAsync(id);
+        return pessoa is null ? NotFound() : View(pessoa);
     }
 
-    // PATCH: api/pessoas/5/bloquear
-    [HttpPatch("{id:int}/bloquear")]
-    public async Task<IActionResult> AlterarBloqueio(int id, [FromBody] bool bloquear)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, PessoaFormViewModel model)
     {
-        var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == id && p.DataDel == null);
-        if (pessoa == null)
-            return NotFound(new { mensagem = "Contato não encontrado." });
+        if (id != model.Id)
+        {
+            return BadRequest();
+        }
 
-        pessoa.DataBloqueio = bloquear ? DateTime.UtcNow : null;
-        pessoa.Status = bloquear ? "Bloqueado" : "Ativo";
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
 
-        await _context.SaveChangesAsync();
-        return NoContent();
+        try
+        {
+            await _service.EditarAsync(model);
+            TempData["Sucesso"] = "Pessoa atualizada com sucesso.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
-    // DELETE: api/pessoas/5 (Soft Delete)
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> SoftDelete(int id)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AlterarBloqueio(int id, bool bloquear)
     {
-        var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == id && p.DataDel == null);
-        if (pessoa == null)
-            return NotFound(new { mensagem = "Contato não encontrado." });
-
-        pessoa.DataDel = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        try
+        {
+            await _service.AlterarBloqueioAsync(id, bloquear);
+            TempData["Sucesso"] = bloquear ? "Pessoa bloqueada." : "Pessoa desbloqueada.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
-    // GET: api/pessoas/5/dados-coletados
-    [HttpGet("{id:int}/dados-coletados")]
-    public async Task<IActionResult> ObterHistoricoColetas(int id)
+    [HttpGet]
+    public async Task<IActionResult> Delete(int id)
     {
-        var historico = await _context.Dados_coletados
-            .Where(d => d.PessoaId == id)
-            .ToListAsync();
+        var pessoa = await _service.ObterDetalhesAsync(id);
+        return pessoa is null ? NotFound() : View(pessoa);
+    }
 
-        return Ok(historico);
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmarDelete(int id)
+    {
+        try
+        {
+            await _service.ExcluirAsync(id);
+            TempData["Sucesso"] = "Pessoa removida com sucesso.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 }

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Defs_Process_01" targetNamespace="https://leadscope.local/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.31.0">
+  <bpmn:process id="Process_01" name="Coleta e Enriquecimento de Dados" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Process_01">
+      <bpmn:lane id="Lane_LS" name="LeadScope B2B">
+        <bpmn:flowNodeRef>Task_Mapear</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0alt6qv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Normalizar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Canonico</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Atualizar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Log</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_01</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AD" name="Adapter / Integração">
+        <bpmn:flowNodeRef>Task_Consultar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Payload</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_US" name="Sistema">
+        <bpmn:flowNodeRef>Start_01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Fonte</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_01" name="Execução programada" />
+    <bpmn:serviceTask id="Task_Fonte" name="Selecionar Fonte de Dados">
+      <bpmn:incoming>F01</bpmn:incoming>
+      <bpmn:outgoing>F02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Consultar" name="Consultar API / dataset / site autorizado">
+      <bpmn:incoming>F02</bpmn:incoming>
+      <bpmn:outgoing>F03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Payload" name="Receber payload bruto">
+      <bpmn:incoming>F03</bpmn:incoming>
+      <bpmn:outgoing>F04</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_Mapear" name="Mapear campos conhecidos">
+      <bpmn:incoming>F04</bpmn:incoming>
+      <bpmn:outgoing>Flow_17ecszc</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="Activity_0alt6qv" name="Criar DADOS_COLETADOS e vincular Fonte + Pessoa/Empresa">
+      <bpmn:incoming>Flow_17ecszc</bpmn:incoming>
+      <bpmn:outgoing>Flow_0yxahfs</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="Task_Normalizar" name="Normalizar valores quando houver regra">
+      <bpmn:incoming>Flow_0yxahfs</bpmn:incoming>
+      <bpmn:outgoing>F07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_Canonico" name="Mapeamento e validação permitem aplicar valor canônico?" />
+    <bpmn:task id="Task_Atualizar" name="Atualizar atributo canônico permitido" />
+    <bpmn:task id="Task_Log" name="Registrar auditoria quando aplicável" />
+    <bpmn:endEvent id="End_01" name="Dados registrados / normalizados" />
+    <bpmn:sequenceFlow id="F01" sourceRef="Start_01" targetRef="Task_Fonte" />
+    <bpmn:sequenceFlow id="F02" sourceRef="Task_Fonte" targetRef="Task_Consultar" />
+    <bpmn:sequenceFlow id="F03" sourceRef="Task_Consultar" targetRef="Task_Payload" />
+    <bpmn:sequenceFlow id="F04" sourceRef="Task_Payload" targetRef="Task_Mapear" />
+    <bpmn:sequenceFlow id="Flow_17ecszc" sourceRef="Task_Mapear" targetRef="Activity_0alt6qv" />
+    <bpmn:sequenceFlow id="Flow_0yxahfs" sourceRef="Activity_0alt6qv" targetRef="Task_Normalizar" />
+    <bpmn:sequenceFlow id="F07" sourceRef="Task_Normalizar" targetRef="Gateway_Canonico" />
+    <bpmn:sequenceFlow id="F08" name="Sim" sourceRef="Gateway_Canonico" targetRef="Task_Atualizar" />
+    <bpmn:sequenceFlow id="F10" name="Não" sourceRef="Gateway_Canonico" targetRef="Task_Log" />
+    <bpmn:sequenceFlow id="F09" sourceRef="Task_Atualizar" targetRef="Task_Log" />
+    <bpmn:sequenceFlow id="F11" sourceRef="Task_Log" targetRef="End_01" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collab_Process_01">
+    <bpmn:participant id="Participant_Process_01" name="LeadScope B2B — Coleta e Enriquecimento" processRef="Process_01" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_Process_01">
+    <bpmndi:BPMNPlane id="Plane_Process_01" bpmnElement="Collab_Process_01">
+      <bpmndi:BPMNShape id="Participant_Process_01_di" bpmnElement="Participant_Process_01" isHorizontal="true">
+        <dc:Bounds x="160" y="67" width="1740" height="740" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_LS_di" bpmnElement="Lane_LS" isHorizontal="true">
+        <dc:Bounds x="190" y="547" width="1710" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AD_di" bpmnElement="Lane_AD" isHorizontal="true">
+        <dc:Bounds x="190" y="307" width="1710" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_US_di" bpmnElement="Lane_US" isHorizontal="true">
+        <dc:Bounds x="190" y="67" width="1710" height="240" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_01_di" bpmnElement="Start_01">
+        <dc:Bounds x="242" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="230" y="178" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dstnhr_di" bpmnElement="Task_Fonte">
+        <dc:Bounds x="310" y="122" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1faby2p_di" bpmnElement="Task_Consultar">
+        <dc:Bounds x="430" y="342" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18dqn3y_di" bpmnElement="Task_Payload">
+        <dc:Bounds x="590" y="342" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_00zvuts_di" bpmnElement="Task_Mapear">
+        <dc:Bounds x="690" y="582" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0alt6qv_di" bpmnElement="Activity_0alt6qv">
+        <dc:Bounds x="840" y="582" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1m235yr_di" bpmnElement="Task_Normalizar">
+        <dc:Bounds x="990" y="582" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Canonico_di" bpmnElement="Gateway_Canonico" isMarkerVisible="true">
+        <dc:Bounds x="1175" y="597" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1119" y="558.5" width="181" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Atualizar_di" bpmnElement="Task_Atualizar">
+        <dc:Bounds x="1315" y="584" width="190" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Log_di" bpmnElement="Task_Log">
+        <dc:Bounds x="1585" y="582" width="190" height="76" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_01_di" bpmnElement="End_01">
+        <dc:Bounds x="1812" y="604" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1785" y="640" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F01_di" bpmnElement="F01">
+        <di:waypoint x="278" y="160" />
+        <di:waypoint x="310" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F02_di" bpmnElement="F02">
+        <di:waypoint x="410" y="160" />
+        <di:waypoint x="480" y="160" />
+        <di:waypoint x="480" y="342" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F03_di" bpmnElement="F03">
+        <di:waypoint x="530" y="380" />
+        <di:waypoint x="590" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F04_di" bpmnElement="F04">
+        <di:waypoint x="690" y="380" />
+        <di:waypoint x="740" y="380" />
+        <di:waypoint x="740" y="582" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17ecszc_di" bpmnElement="Flow_17ecszc">
+        <di:waypoint x="790" y="622" />
+        <di:waypoint x="840" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yxahfs_di" bpmnElement="Flow_0yxahfs">
+        <di:waypoint x="940" y="622" />
+        <di:waypoint x="990" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F07_di" bpmnElement="F07">
+        <di:waypoint x="1090" y="620" />
+        <di:waypoint x="1177" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F08_di" bpmnElement="F08">
+        <di:waypoint x="1225" y="622" />
+        <di:waypoint x="1315" y="622" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1260" y="602" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1200" y="647" />
+        <di:waypoint x="1200" y="697" />
+        <di:waypoint x="1600" y="697" />
+        <di:waypoint x="1600" y="658" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1213" y="672" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F09_di" bpmnElement="F09">
+        <di:waypoint x="1505" y="622" />
+        <di:waypoint x="1585" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F11_di" bpmnElement="F11">
+        <di:waypoint x="1775" y="620" />
+        <di:waypoint x="1812" y="620" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

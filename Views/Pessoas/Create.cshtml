@@ -1,0 +1,20 @@
+@model PessoaFormViewModel
+@{
+    ViewData["Title"] = "Nova pessoa";
+}
+
+<h1 class="h3">Nova pessoa</h1>
+<p class="text-muted">Cadastre um novo contato para a base.</p>
+
+<form asp-action="Create" method="post" class="card card-body">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <partial name="_FormFields" model="Model" />
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

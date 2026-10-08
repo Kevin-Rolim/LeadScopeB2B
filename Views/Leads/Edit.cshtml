@@ -1,0 +1,20 @@
+@model LeadFormViewModel
+@{
+    ViewData["Title"] = "Editar lead";
+    ViewData["Edicao"] = true;
+}
+
+<h1 class="h3">Editar lead</h1>
+
+<form asp-action="Edit" asp-route-pessoaId="@Model.PessoaId" asp-route-empresaId="@Model.EmpresaId" method="post" class="card card-body mt-3">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <partial name="_FormFields" model="Model" view-data="ViewData" />
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

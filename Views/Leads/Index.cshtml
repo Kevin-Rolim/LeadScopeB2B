@@ -1,0 +1,55 @@
+@model IReadOnlyList<LeadListViewModel>
+@{
+    ViewData["Title"] = "Leads";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Leads</h1>
+        <p class="text-muted mb-0">Vínculos entre pessoas e empresas.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Novo lead</a>
+</div>
+
+@if (TempData["Sucesso"] is string mensagem)
+{
+    <div class="alert alert-success">@mensagem</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Pessoa</th>
+                <th>Empresa</th>
+                <th>Cargo</th>
+                <th>Senioridade</th>
+                <th>Status</th>
+                <th>Confiança</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var lead in Model)
+        {
+            <tr>
+                <td>@lead.Pessoa</td>
+                <td>@lead.Empresa</td>
+                <td>@(lead.Cargo ?? "—")</td>
+                <td>@(lead.Senioridade ?? "—")</td>
+                <td>@(lead.StatusLead ?? "—")</td>
+                <td>@(lead.NivelConfianca.HasValue ? $"{lead.NivelConfianca:0.##}%" : "—")</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" class="btn btn-sm btn-outline-secondary">Detalhes</a>
+                    <a asp-action="Edit" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" class="btn btn-sm btn-outline-primary">Editar</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.Count == 0)
+{
+    <p class="text-muted">Nenhum lead cadastrado.</p>
+}
