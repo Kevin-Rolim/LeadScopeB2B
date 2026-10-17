@@ -1,3 +1,5 @@
+using System.Data;
+using Microsoft.Data.SqlClient;
 namespace LeadScopeB2B.Data;
 
 internal static class SqlValues
