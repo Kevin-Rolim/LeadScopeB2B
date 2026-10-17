@@ -18,5 +18,27 @@
     <dt class="col-sm-3">Atualizada em</dt><dd class="col-sm-9">@Model.DataAtualizacao.ToString("dd/MM/yyyy HH:mm")</dd>
 </dl>
 
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+@if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a> }
 <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+
+<a asp-controller="Leads" asp-action="Index" asp-route-empresaId="@Model.Id" class="btn btn-outline-secondary">Ver leads desta empresa</a>
+<h2 class="h5 mt-4">CNAEs da empresa</h2>
+<ul class="list-group mb-3">
+@foreach(var item in Model.Cnaes) {
+<li class="list-group-item d-flex justify-content-between align-items-center"><span>@item.CnaeNumero — @item.Cnaes.Descricao @(item.Principal?"(principal)":"")</span>
+@if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) {
+<form asp-controller="Cnaes" asp-action="Remover" method="post"><input name="empresaId" value="@Model.Id" type="hidden" /><input name="numero" value="@item.CnaeNumero" type="hidden" /><button class="btn btn-sm btn-outline-danger">Desassociar</button></form>
+}
+</li>
+}
+</ul>
+@if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) {
+<form asp-controller="Cnaes" asp-action="Associar" method="post" class="card card-body gap-2 mb-3">
+<input name="empresaId" value="@Model.Id" type="hidden" />
+<label for="numero">CNAE cadastrado (7 dígitos)</label><input id="numero" name="numero" class="form-control" required pattern="[0-9]{7}" maxlength="7" />
+<label><input name="principal" value="true" type="checkbox" /> CNAE principal</label>
+<button class="btn btn-outline-primary align-self-start">Associar / atualizar</button>
+<a asp-controller="Cnaes" asp-action="Index">Consultar códigos disponíveis</a>
+</form>
+<form asp-action="Excluir" method="post" asp-route-id="@Model.Id" data-confirm="Remover esta empresa da base ativa e ocultar seus leads? O histórico será preservado."><button class="btn btn-outline-danger">Remover empresa</button></form>
+}

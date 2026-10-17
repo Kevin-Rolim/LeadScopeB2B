@@ -1,0 +1,18 @@
+@model IReadOnlyList<FonteDados>
+@{ViewData["Title"]="Fontes de dados";}
+<h1 class="h3">Fontes de dados</h1>
+<table class="table table-striped"><thead><tr><th>ID</th><th>Nome</th><th>Tipo</th><th>Confiabilidade</th><th>Situação</th><th>Ação</th></tr></thead><tbody>
+@foreach(var f in Model) {
+<tr><td>@f.Id</td><td>@f.Nome</td><td>@f.Tipo</td><td>@f.Confiabilidade</td><td>@(f.Ativo?"Ativa":"Inativa")</td><td>
+<form asp-action="AlterarAtivo" method="post"><input name="id" value="@f.Id" type="hidden" /><input name="ativo" value="@(!f.Ativo ? "true":"false")" type="hidden" /><button class="btn btn-sm btn-outline-secondary">@(f.Ativo?"Desativar":"Reativar")</button></form>
+</td></tr>
+}
+</tbody></table>
+<h2 class="h5">Cadastrar fonte</h2>
+<form asp-action="Create" method="post" class="card card-body gap-2">
+<label for="Nome">Nome</label><input id="Nome" name="Nome" required maxlength="100" class="form-control" />
+<label for="Tipo">Tipo</label><select id="Tipo" name="Tipo" class="form-select"><option>API</option><option>ARQUIVO</option><option>SITE</option><option>MANUAL</option></select>
+<label for="Url">URL de referência</label><input id="Url" name="Url" type="url" maxlength="255" class="form-control" />
+<label for="Confiabilidade">Confiabilidade de 0 a 100</label><input id="Confiabilidade" name="Confiabilidade" type="number" min="0" max="100" step="0.01" class="form-control" />
+<button class="btn btn-primary align-self-start">Cadastrar</button>
+</form>

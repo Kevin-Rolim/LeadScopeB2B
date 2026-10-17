@@ -1,0 +1,19 @@
+@model RedefinirSenhaViewModel
+@{ ViewData["Title"] = "Redefinir senha"; }
+<div class="mx-auto" style="max-width: 520px">
+<h1 class="h3">Redefinir senha</h1>
+@if(ViewData["TokenValido"] is true) {
+    <form asp-action="RedefinirSenha" method="post" class="card card-body gap-2">
+        <input asp-for="Token" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <label asp-for="NovaSenha" class="form-label"></label><input asp-for="NovaSenha" class="form-control" autocomplete="new-password" /><span asp-validation-for="NovaSenha" class="text-danger"></span>
+        <label asp-for="ConfirmacaoSenha" class="form-label"></label><input asp-for="ConfirmacaoSenha" class="form-control" autocomplete="new-password" /><span asp-validation-for="ConfirmacaoSenha" class="text-danger"></span>
+        <button class="btn btn-primary mt-2" type="submit">Salvar nova senha</button>
+    </form>
+} else {
+    <div class="alert alert-warning" role="alert">@LeadScopeB2B.Services.RecuperacaoAcessoService.MensagemTokenInvalido</div>
+    <a asp-action="RecuperarAcesso" class="btn btn-primary">Solicitar novo link</a>
+}
+<a asp-action="Login" class="d-block mt-3">Voltar para entrar</a>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

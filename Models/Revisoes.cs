@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class Revisoes
 {
-    [Key]
     public int Id { get; set; }
 
     [StringLength(100)]

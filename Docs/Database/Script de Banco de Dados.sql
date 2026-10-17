@@ -1,3 +1,6 @@
+-- HISTÓRICO: este arquivo descreve uma versão antiga e não deve ser aplicado na instalação atual.
+-- Consulte EsquemaAtual.sql para bancos novos e ../../README.md para configuração.
+
 CREATE DATABASE LeadScopeB2B;
 GO
 

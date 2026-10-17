@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LeadScopeB2B.Models;
 
 public class FonteDados
 {
-    [Key]
     public int Id { get; set; }
 
     [Required]
@@ -18,9 +16,10 @@ public class FonteDados
     [StringLength(255)]
     public string? Url { get; set; }
 
-    [Column(TypeName = "decimal(5,2)")]
     [Range(0, 100)]
     public decimal? Confiabilidade { get; set; }
+
+    public bool Ativo { get; set; } = true;
 
     public DateTime DataHoraMod { get; set; }
 

@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class Exportacoes
 {
-    [Key]
     public int Id { get; set; }
 
     [Range(0, int.MaxValue)]

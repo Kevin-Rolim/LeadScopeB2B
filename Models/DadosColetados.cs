@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LeadScopeB2B.Models;
 
 public class DadosColetados
 {
-    [Key]
     public int Id { get; set; }
 
     [Required]
@@ -15,9 +13,13 @@ public class DadosColetados
     [Required]
     public string Valor { get; set; } = string.Empty;
 
-    [Column(TypeName = "decimal(5,2)")]
     [Range(0, 100)]
     public decimal? NivelConfianca { get; set; }
+
+    public string StatusValidacao { get; set; } = "PENDENTE";
+    public string? ValorNormalizado { get; set; }
+    public string? EvidenciaUrl { get; set; }
+    public DateTime DataColeta { get; set; }
 
     [Required]
     public int FonteDadosID { get; set; }

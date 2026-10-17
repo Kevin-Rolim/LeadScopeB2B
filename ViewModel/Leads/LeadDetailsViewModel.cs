@@ -15,4 +15,5 @@ public class LeadDetailsViewModel
     public decimal? NivelConfianca { get; set; }
     public string? FonteVinculo { get; set; }
     public DateTime? DataVerificacao { get; set; }
+    public IReadOnlyList<Models.Revisoes> Revisoes { get; set; } = [];
 }

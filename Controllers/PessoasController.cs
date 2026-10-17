@@ -1,3 +1,5 @@
+using LeadScopeB2B.Security;
+using Microsoft.AspNetCore.Authorization;
 using LeadScopeB2B.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,9 +14,9 @@ public class PessoasController : Controller
         _service = service;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? busca, string? status)
     {
-        return View(await _service.ListarAsync());
+        return View(await _service.ListarAsync(busca, status));
     }
 
     public async Task<IActionResult> Details(int id)
@@ -23,12 +25,14 @@ public class PessoasController : Controller
         return pessoa is null ? NotFound() : View(pessoa);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
     public IActionResult Create()
     {
         return View(new PessoaFormViewModel());
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PessoaFormViewModel model)
@@ -43,6 +47,7 @@ public class PessoasController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -50,6 +55,7 @@ public class PessoasController : Controller
         return pessoa is null ? NotFound() : View(pessoa);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, PessoaFormViewModel model)
@@ -76,6 +82,7 @@ public class PessoasController : Controller
         }
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AlterarBloqueio(int id, bool bloquear)
@@ -92,6 +99,7 @@ public class PessoasController : Controller
         }
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
@@ -99,6 +107,7 @@ public class PessoasController : Controller
         return pessoa is null ? NotFound() : View(pessoa);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmarDelete(int id)

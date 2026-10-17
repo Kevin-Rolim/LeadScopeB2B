@@ -25,5 +25,8 @@ public class UsuarioEditViewModel
     [Display(Name = "Perfil de acesso")]
     public int PerfilAcessoId { get; set; }
 
+    [Required]
+    public string Status { get; set; } = "ATIVO";
+
     public IReadOnlyList<PerfisAcesso> PerfisDisponiveis { get; set; } = [];
 }

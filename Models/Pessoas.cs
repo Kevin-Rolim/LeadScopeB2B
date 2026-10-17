@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class Pessoas
 {
-    [Key]
     public int Id { get; set; }
 
     [Required]

@@ -23,13 +23,17 @@
 </dl>
 
 <div class="d-flex gap-2 flex-wrap">
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+    @if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a> }
+    @if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) {
     <form asp-action="AlterarBloqueio" asp-route-id="@Model.Id" method="post">
         <input type="hidden" name="bloquear" value="@(!Model.DataBloqueio.HasValue ? "true" : "false")" />
         <button type="submit" class="btn btn-outline-warning">
             @(Model.DataBloqueio.HasValue ? "Desbloquear" : "Bloquear")
         </button>
     </form>
-    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Remover</a>
+    }
+    @if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Remover</a> }
     <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
 </div>
+
+<a asp-controller="Leads" asp-action="Index" asp-route-pessoaId="@Model.Id" class="btn btn-outline-secondary mt-3">Ver leads desta pessoa</a>

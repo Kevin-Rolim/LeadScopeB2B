@@ -11,9 +11,9 @@ public class LeadService
         _repository = repository;
     }
 
-    public async Task<List<LeadListViewModel>> ListarAsync()
+    public async Task<List<LeadListViewModel>> ListarAsync(string? busca = null, string? status = null, int? pessoaId = null, int? empresaId = null, string? cnae = null)
     {
-        var leads = await _repository.ListarAsync();
+        var leads = await _repository.ListarAsync(CadastroRules.Limpar(busca), CadastroRules.Limpar(status), pessoaId, empresaId, CadastroRules.Limpar(cnae) is string numero ? CnaeService.Normalizar(numero) : null);
         return leads.Select(l => new LeadListViewModel
         {
             PessoaId = l.PessoaId,
@@ -49,7 +49,8 @@ public class LeadService
             DataRevisao = lead.DataRevisao,
             NivelConfianca = lead.NivelConfianca,
             FonteVinculo = lead.FonteVinculo,
-            DataVerificacao = lead.DataVerif
+            DataVerificacao = lead.DataVerif,
+            Revisoes = await _repository.ListarRevisoesAsync(pessoaId, empresaId)
         };
     }
 
@@ -75,7 +76,7 @@ public class LeadService
             Departamento = lead.Departamento,
             Senioridade = lead.Senioridade,
             StatusVinculo = lead.StatusVinculo,
-            StatusLead = lead.StatusLead,
+            StatusLead = lead.StatusLead is "NOVO" or "EM_ANALISE" ? lead.StatusLead : "EM_ANALISE",
             NivelConfianca = lead.NivelConfianca,
             FonteVinculo = lead.FonteVinculo
         };
@@ -85,15 +86,16 @@ public class LeadService
 
     public async Task CadastrarAsync(LeadFormViewModel model)
     {
+        CadastroRules.Validar(model);
         if (!await _repository.PessoaExisteAsync(model.PessoaId) ||
             !await _repository.EmpresaExisteAsync(model.EmpresaId))
         {
-            throw new InvalidOperationException("A pessoa ou a empresa selecionada não existe.");
+            throw new ConflitoException("A pessoa ou a empresa selecionada não existe.");
         }
 
         if (await _repository.ObterAsync(model.PessoaId, model.EmpresaId) is not null)
         {
-            throw new InvalidOperationException("Esse vínculo entre pessoa e empresa já está cadastrado.");
+            throw new ConflitoException("Esse vínculo entre pessoa e empresa já está cadastrado.");
         }
 
         var lead = new PessoasEmpresas
@@ -111,9 +113,10 @@ public class LeadService
         var lead = await _repository.ObterAsync(pessoaId, empresaId)
             ?? throw new KeyNotFoundException("Lead não encontrado.");
 
+        CadastroRules.Validar(model);
         Aplicar(model, lead);
         lead.DataVerif = DateTime.UtcNow;
-        await _repository.SalvarAlteracoesAsync();
+        await _repository.AtualizarAsync(lead);
     }
 
     private static void Aplicar(LeadFormViewModel model, PessoasEmpresas lead)
@@ -121,10 +124,19 @@ public class LeadService
         lead.Cargo = Limpar(model.Cargo);
         lead.Departamento = Limpar(model.Departamento);
         lead.Senioridade = Limpar(model.Senioridade);
-        lead.StatusVinculo = Limpar(model.StatusVinculo);
-        lead.StatusLead = Limpar(model.StatusLead);
+        lead.StatusVinculo = CadastroRules.Estado(model.StatusVinculo ?? "INCERTO", "INCERTO", "ATIVO", "INATIVO");
+        lead.StatusLead = CadastroRules.Estado(model.StatusLead ?? "NOVO", "NOVO", "EM_ANALISE");
         lead.NivelConfianca = model.NivelConfianca;
         lead.FonteVinculo = Limpar(model.FonteVinculo);
+    }
+
+    public Task ExcluirAsync(int pessoaId, int empresaId) => _repository.ExcluirAsync(pessoaId, empresaId);
+
+    public Task RevisarAsync(int pessoaId, int empresaId, int usuarioId, string decisao, string? comentario)
+    {
+        decisao = CadastroRules.Estado(decisao, "QUALIFICADO", "REJEITADO", "EM_ANALISE");
+        if (comentario?.Length > 2000) throw new System.ComponentModel.DataAnnotations.ValidationException("Comentário deve ter até 2000 caracteres.");
+        return _repository.RevisarAsync(pessoaId, empresaId, usuarioId, decisao, CadastroRules.Limpar(comentario));
     }
 
     private static string NomeEmpresa(Empresas empresa)

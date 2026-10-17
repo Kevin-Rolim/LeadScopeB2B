@@ -1,8 +1,11 @@
+using LeadScopeB2B.Security;
+using Microsoft.AspNetCore.Authorization;
 using LeadScopeB2B.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LeadScopeB2B.Controllers;
 
+[Authorize(Policy = Acesso.Admin)]
 public class UsuariosController : Controller
 {
     private readonly UsuarioService _service;
@@ -93,5 +96,20 @@ public class UsuariosController : Controller
             await _service.PrepararFormularioAsync(model);
             return View(model);
         }
+    }
+    [HttpPost]
+    public async Task<IActionResult> AlterarBloqueio(int id, bool bloquear)
+    {
+        await _service.AlterarBloqueioAsync(id, bloquear);
+        TempData["Sucesso"] = bloquear ? "Usuário bloqueado e sessões revogadas." : "Usuário desbloqueado. É necessário entrar novamente.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, Authorize(Policy = Acesso.Admin)]
+    public async Task<IActionResult> Excluir(int id)
+    {
+        await _service.ExcluirAsync(id);
+        TempData["Sucesso"] = "Registro removido da lista de ativos.";
+        return RedirectToAction(nameof(Index));
     }
 }

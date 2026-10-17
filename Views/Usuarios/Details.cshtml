@@ -5,6 +5,7 @@
 
 <h1 class="h3">Detalhes do usuário</h1>
 
+<p>Situação: @Model.Status</p>
 <dl class="row card card-body mt-3">
     <dt class="col-sm-3">Nome</dt>
     <dd class="col-sm-9">@Model.Nome</dd>
@@ -14,5 +15,14 @@
     <dd class="col-sm-9">@Model.PerfilAcesso</dd>
 </dl>
 
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+@if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a> }
 <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+
+<form asp-action="Excluir" method="post" asp-route-id="@Model.Id" class="mt-3" data-confirm="Desativar este usuário? O histórico será preservado."><button class="btn btn-outline-danger">Desativar usuário</button></form>
+
+@if(Model.Status is "ATIVO" or "BLOQUEADO") {
+<form asp-action="AlterarBloqueio" method="post" asp-route-id="@Model.Id" class="mt-3" data-confirm="Confirma a alteração do bloqueio? As sessões anteriores serão revogadas.">
+    <input name="bloquear" value="@(Model.Status == "ATIVO" ? "true" : "false")" type="hidden" />
+    <button class="btn btn-outline-warning">@(Model.Status == "ATIVO" ? "Bloquear conta" : "Desbloquear conta")</button>
+</form>
+}

@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LeadScopeB2B.Models;
 
@@ -32,7 +31,6 @@ public class PessoasEmpresas
 
     public DateTime? DataRevisao { get; set; }
 
-    [Column(TypeName = "decimal(5,2)")]
     [Range(0, 100)]
     public decimal? NivelConfianca { get; set; }
 

@@ -18,5 +18,21 @@
     <dt class="col-sm-3">Última revisão</dt><dd class="col-sm-9">@(Model.DataRevisao?.ToString("dd/MM/yyyy HH:mm") ?? "—")</dd>
 </dl>
 
-<a asp-action="Edit" asp-route-pessoaId="@Model.PessoaId" asp-route-empresaId="@Model.EmpresaId" class="btn btn-primary">Editar</a>
+@if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Edit" asp-route-pessoaId="@Model.PessoaId" asp-route-empresaId="@Model.EmpresaId" class="btn btn-primary">Editar</a> }
 <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+
+<div class="mt-3 d-flex gap-2"><a asp-controller="Pessoas" asp-action="Details" asp-route-id="@Model.PessoaId">Ver pessoa</a><a asp-controller="Empresas" asp-action="Details" asp-route-id="@Model.EmpresaId">Ver empresa</a></div>
+@if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) {
+<h2 class="h5 mt-4">Revisar lead</h2>
+<form asp-action="Revisar" method="post" class="card card-body gap-2">
+<input name="pessoaId" value="@Model.PessoaId" type="hidden" /><input name="empresaId" value="@Model.EmpresaId" type="hidden" />
+<label for="decisao">Decisão</label><select id="decisao" name="decisao" class="form-select"><option>EM_ANALISE</option><option>QUALIFICADO</option><option>REJEITADO</option></select>
+<label for="comentario">Comentário</label><textarea id="comentario" name="comentario" class="form-control" maxlength="2000"></textarea>
+<button class="btn btn-primary align-self-start">Registrar revisão</button>
+</form>
+<form asp-action="Excluir" method="post" asp-route-pessoaId="@Model.PessoaId" asp-route-empresaId="@Model.EmpresaId" data-confirm="Remover este lead da base ativa? O histórico será preservado." class="mt-3"><button class="btn btn-outline-danger">Remover lead</button></form>
+}
+<h2 class="h5 mt-4">Histórico de revisões</h2>
+<table class="table"><thead><tr><th>Data (UTC)</th><th>Usuário</th><th>Decisão</th><th>Comentário</th></tr></thead><tbody>
+@foreach(var r in Model.Revisoes){<tr><td>@r.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@r.Usuarios.Nome</td><td>@r.Decisao</td><td>@r.Comentario</td></tr>}
+</tbody></table>

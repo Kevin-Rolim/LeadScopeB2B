@@ -11,9 +11,9 @@ public class PessoaService
         _repository = repository;
     }
 
-    public async Task<List<PessoaListViewModel>> ListarAsync()
+    public async Task<List<PessoaListViewModel>> ListarAsync(string? busca = null, string? status = null)
     {
-        var pessoas = await _repository.ListarAtivasAsync();
+        var pessoas = await _repository.ListarAtivasAsync(CadastroRules.Limpar(busca), CadastroRules.Limpar(status));
         return pessoas.Select(p => new PessoaListViewModel
         {
             Id = p.Id,
@@ -38,14 +38,16 @@ public class PessoaService
         return pessoa is null ? null : MapearFormulario(pessoa);
     }
 
-    public async Task CadastrarAsync(PessoaFormViewModel model)
+    public async Task<int> CadastrarAsync(PessoaFormViewModel model)
     {
+        CadastroRules.Validar(model);
         var pessoa = new Pessoas
         {
             DataColeta = DateTime.UtcNow
         };
         Aplicar(model, pessoa);
         await _repository.AdicionarAsync(pessoa);
+        return pessoa.Id;
     }
 
     public async Task EditarAsync(PessoaFormViewModel model)
@@ -53,8 +55,9 @@ public class PessoaService
         var pessoa = await _repository.ObterAtivaPorIdAsync(model.Id)
             ?? throw new KeyNotFoundException("Pessoa não encontrada.");
 
+        CadastroRules.Validar(model);
         Aplicar(model, pessoa);
-        await _repository.SalvarAlteracoesAsync();
+        await _repository.AtualizarAsync(pessoa);
     }
 
     public async Task AlterarBloqueioAsync(int id, bool bloquear)
@@ -63,8 +66,8 @@ public class PessoaService
             ?? throw new KeyNotFoundException("Pessoa não encontrada.");
 
         pessoa.DataBloqueio = bloquear ? DateTime.UtcNow : null;
-        pessoa.Status = bloquear ? "Bloqueado" : "Ativo";
-        await _repository.SalvarAlteracoesAsync();
+        pessoa.Status = bloquear ? "BLOQUEADO" : "PENDENTE";
+        await _repository.AtualizarAsync(pessoa);
     }
 
     public async Task ExcluirAsync(int id)
@@ -73,7 +76,8 @@ public class PessoaService
             ?? throw new KeyNotFoundException("Pessoa não encontrada.");
 
         pessoa.DataDel = DateTime.UtcNow;
-        await _repository.SalvarAlteracoesAsync();
+        pessoa.Status = "REMOVIDO";
+        await _repository.AtualizarAsync(pessoa);
     }
 
     private static void Aplicar(PessoaFormViewModel model, Pessoas pessoa)
@@ -81,8 +85,9 @@ public class PessoaService
         pessoa.Nome = model.Nome.Trim();
         pessoa.Email = Limpar(model.Email)?.ToLowerInvariant();
         pessoa.Telefone = Limpar(model.Telefone);
-        pessoa.UrlLinkedin = Limpar(model.UrlLinkedin);
-        pessoa.Status = model.Status.Trim();
+        pessoa.UrlLinkedin = CadastroRules.Url(model.UrlLinkedin)?.TrimEnd('/').ToLowerInvariant();
+        var status = CadastroRules.Estado(model.Status, "PENDENTE", "VALIDADO");
+        pessoa.Status = pessoa.DataBloqueio.HasValue ? "BLOQUEADO" : status;
         pessoa.Origem = Limpar(model.Origem);
     }
 
@@ -93,7 +98,7 @@ public class PessoaService
         Email = pessoa.Email,
         Telefone = pessoa.Telefone,
         UrlLinkedin = pessoa.UrlLinkedin,
-        Status = pessoa.Status ?? "PENDENTE",
+        Status = pessoa.DataBloqueio.HasValue ? "PENDENTE" : pessoa.Status ?? "PENDENTE",
         Origem = pessoa.Origem
     };
 

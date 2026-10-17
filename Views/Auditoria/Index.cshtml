@@ -1,0 +1,6 @@
+@model IReadOnlyList<Logs>
+@{ViewData["Title"]="Auditoria";}
+<h1 class="h3">Auditoria</h1><p>Últimos 200 eventos registrados.</p>
+<table class="table table-striped"><thead><tr><th>Data (UTC)</th><th>Usuário</th><th>Evento</th><th>Descrição</th></tr></thead><tbody>
+@foreach(var item in Model) {<tr><td>@item.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@item.Usuarios.Nome</td><td>@item.TiporEvento</td><td>@item.DescricaoEvento</td></tr>}
+</tbody></table>

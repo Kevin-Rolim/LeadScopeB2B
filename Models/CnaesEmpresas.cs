@@ -8,6 +8,8 @@ public class CnaesEmpresas
     [StringLength(20)]
     public string CnaeNumero { get; set; } = string.Empty;
 
+    public bool Principal { get; set; }
+
     public Cnaes Cnaes { get; set; } = null!;
 
     [Required]

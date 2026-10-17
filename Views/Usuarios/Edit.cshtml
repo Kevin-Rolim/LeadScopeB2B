@@ -38,6 +38,7 @@
         </div>
     </div>
 
+    <label asp-for="Status" class="form-label mt-3"></label><select asp-for="Status" class="form-select"><option>ATIVO</option><option>BLOQUEADO</option><option>DESATIVADO</option></select>
     <div class="mt-4">
         <button type="submit" class="btn btn-primary">Salvar alterações</button>
         <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>

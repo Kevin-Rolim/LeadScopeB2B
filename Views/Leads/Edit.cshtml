@@ -4,7 +4,7 @@
     ViewData["Edicao"] = true;
 }
 
-<h1 class="h3">Editar lead</h1>
+<h1 class="h3">Editar lead</h1><p>Salvar alterações reabre a análise e exige nova revisão para qualificar o lead.</p>
 
 <form asp-action="Edit" asp-route-pessoaId="@Model.PessoaId" asp-route-empresaId="@Model.EmpresaId" method="post" class="card card-body mt-3">
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>

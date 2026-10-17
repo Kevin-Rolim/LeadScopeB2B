@@ -69,17 +69,17 @@
     </div>
     <div class="col-md-4">
         <label asp-for="StatusVinculo" class="form-label"></label>
-        <input asp-for="StatusVinculo" class="form-control" />
+        <select asp-for="StatusVinculo" class="form-select"><option>INCERTO</option><option>ATIVO</option><option>INATIVO</option></select>
         <span asp-validation-for="StatusVinculo" class="text-danger"></span>
     </div>
     <div class="col-md-4">
         <label asp-for="StatusLead" class="form-label"></label>
-        <input asp-for="StatusLead" class="form-control" />
+        <select asp-for="StatusLead" class="form-select"><option>NOVO</option><option>EM_ANALISE</option></select><small class="text-muted">Qualificação e rejeição são feitas na revisão.</small>
         <span asp-validation-for="StatusLead" class="text-danger"></span>
     </div>
     <div class="col-md-6">
         <label asp-for="NivelConfianca" class="form-label"></label>
-        <input asp-for="NivelConfianca" class="form-control" />
+        <input asp-for="NivelConfianca" type="number" step="0.01" min="0" max="100" class="form-control" />
         <span asp-validation-for="NivelConfianca" class="text-danger"></span>
     </div>
     <div class="col-md-6">

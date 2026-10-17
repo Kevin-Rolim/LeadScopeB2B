@@ -1,0 +1,22 @@
+@model IReadOnlyList<DadosColetados>
+@{ViewData["Title"]="Revisar dados externos";}
+<h1 class="h3">Revisar dados externos</h1>
+<p>Confira a evidência antes de aplicar o valor ao cadastro. Até 200 registros por consulta.</p>
+<form method="get" class="d-flex gap-2 mb-3"><select name="status" class="form-select" aria-label="Status da evidência">
+@foreach(var s in new[]{"PENDENTE","VALIDADO","REJEITADO"}) {<option value="@s" selected="@(Context.Request.Query["status"].ToString()==s)">@s</option>}
+</select><button class="btn btn-outline-primary">Filtrar</button></form>
+<div class="table-responsive"><table class="table"><thead><tr><th>Destino</th><th>Campo</th><th>Recebido / normalizado</th><th>Fonte / confiança</th><th>Status</th><th>Revisão</th></tr></thead><tbody>
+@foreach(var d in Model) {
+<tr><td>
+@if(d.PessoaId.HasValue){<a asp-controller="Pessoas" asp-action="Details" asp-route-id="@d.PessoaId">Pessoa @d.PessoaId</a>}
+else{<a asp-controller="Empresas" asp-action="Details" asp-route-id="@d.EmpresaId">Empresa @d.EmpresaId</a>}
+</td><td>@d.Campo</td><td>@d.Valor<div class="small text-muted">@d.ValorNormalizado</div>
+@if(d.EvidenciaUrl is string url && Uri.TryCreate(url,UriKind.Absolute,out var uri) && (uri.Scheme=="https" || uri.Scheme=="http")){<a href="@url" target="_blank" rel="noopener noreferrer">Ver evidência</a>}
+</td><td>@d.FonteDadosID / @d.NivelConfianca</td><td>@d.StatusValidacao</td><td>
+@if(d.StatusValidacao=="PENDENTE") {
+<form asp-action="Revisar" method="post" class="d-flex gap-1"><input name="id" value="@d.Id" type="hidden" /><button name="aprovar" value="true" class="btn btn-sm btn-success">Aplicar</button><button name="aprovar" value="false" class="btn btn-sm btn-outline-danger">Rejeitar</button></form>
+}
+</td></tr>
+}
+</tbody></table></div>
+@if(Model.Count==0){<p>Nenhuma evidência nesta situação.</p>}

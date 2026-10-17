@@ -25,6 +25,7 @@ public class PessoaFormViewModel
 
     [Required(ErrorMessage = "Informe o status.")]
     [StringLength(50)]
+    [RegularExpression("^(PENDENTE|VALIDADO)$")]
     public string Status { get; set; } = "PENDENTE";
 
     [StringLength(100)]

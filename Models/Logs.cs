@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class Logs
 {
-    [Key]
     public int Id { get; set; }
 
     [Required]

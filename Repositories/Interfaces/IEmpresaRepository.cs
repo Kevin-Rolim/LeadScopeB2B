@@ -2,9 +2,10 @@ namespace LeadScopeB2B.Repositories.Interfaces;
 
 public interface IEmpresaRepository
 {
-    Task<List<Empresas>> ListarAsync();
+    Task<List<Empresas>> ListarAsync(string? busca = null, string? status = null, string? cnae = null);
     Task<Empresas?> ObterPorIdAsync(int id);
     Task<bool> CnpjExisteAsync(string cnpj, int? ignorarId = null);
     Task AdicionarAsync(Empresas empresa);
-    Task SalvarAlteracoesAsync();
+    Task AtualizarAsync(Empresas empresa);
+    Task ExcluirAsync(int id);
 }

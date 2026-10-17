@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class ConjuntoPermissoes
 {
-    [Key]
     public int Id { get; set; }
 
     [Required]

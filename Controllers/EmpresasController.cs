@@ -1,3 +1,5 @@
+using LeadScopeB2B.Security;
+using Microsoft.AspNetCore.Authorization;
 using LeadScopeB2B.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,29 +8,35 @@ namespace LeadScopeB2B.Controllers;
 public class EmpresasController : Controller
 {
     private readonly EmpresaService _service;
+    private readonly CnaeService _cnaes;
 
-    public EmpresasController(EmpresaService service)
+    public EmpresasController(EmpresaService service, CnaeService cnaes)
     {
         _service = service;
+        _cnaes = cnaes;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? busca, string? status, string? cnae)
     {
-        return View(await _service.ListarAsync());
+        return View(await _service.ListarAsync(busca, status, cnae));
     }
 
     public async Task<IActionResult> Details(int id)
     {
         var empresa = await _service.ObterDetalhesAsync(id);
-        return empresa is null ? NotFound() : View(empresa);
+        if (empresa is null) return NotFound();
+        empresa.Cnaes = await _cnaes.ListarDaEmpresaAsync(id);
+        return View(empresa);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
     public IActionResult Create()
     {
         return View(new EmpresaFormViewModel());
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(EmpresaFormViewModel model)
@@ -51,6 +59,7 @@ public class EmpresasController : Controller
         }
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -58,6 +67,7 @@ public class EmpresasController : Controller
         return empresa is null ? NotFound() : View(empresa);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, EmpresaFormViewModel model)
@@ -87,5 +97,12 @@ public class EmpresasController : Controller
             ModelState.AddModelError(nameof(model.Cnpj), ex.Message);
             return View(model);
         }
+    }
+    [HttpPost, Authorize(Policy = Acesso.Edicao)]
+    public async Task<IActionResult> Excluir(int id)
+    {
+        await _service.ExcluirAsync(id);
+        TempData["Sucesso"] = "Registro removido da lista de ativos.";
+        return RedirectToAction(nameof(Index));
     }
 }
