@@ -49,7 +49,7 @@ public class LeadService
             DataRevisao = lead.DataRevisao,
             NivelConfianca = lead.NivelConfianca,
             FonteVinculo = lead.FonteVinculo,
-            DataVerificacao = lead.DataVerif,
+            DataVerificacao = lead.DataVerificacao,
             Revisoes = await _repository.ListarRevisoesAsync(pessoaId, empresaId)
         };
     }
@@ -102,7 +102,7 @@ public class LeadService
         {
             PessoaId = model.PessoaId,
             EmpresaId = model.EmpresaId,
-            DataVerif = DateTime.UtcNow
+            DataVerificacao = DateTime.UtcNow
         };
         Aplicar(model, lead);
         await _repository.AdicionarAsync(lead);
@@ -115,7 +115,7 @@ public class LeadService
 
         CadastroRules.Validar(model);
         Aplicar(model, lead);
-        lead.DataVerif = DateTime.UtcNow;
+        lead.DataVerificacao = DateTime.UtcNow;
         await _repository.AtualizarAsync(lead);
     }
 

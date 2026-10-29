@@ -11,7 +11,7 @@ public interface IUsuarioRepository
     Task AtualizarAsync(Usuarios usuario);
     Task<Usuarios?> ObterPorEmailAsync(string email);
     Task CadastrarPublicoAsync(Usuarios usuario);
-    Task<Usuarios> AtualizarPerfilAsync(int id, string nome, string email, string senhaEsperada, long versaoEsperada);
-    Task<bool> AtualizarSenhaAsync(int id, string email, string senhaEsperada, long versaoEsperada, string novaSenha, string evento);
+    Task<Usuarios> AtualizarPerfilAsync(int id, string nome, string email, string senhaEsperada);
+    Task<bool> AtualizarSenhaAsync(int id, string email, string senhaEsperada, string novaSenha, string evento);
     Task CriarAdministradorInicialAsync(Usuarios usuario);
 }

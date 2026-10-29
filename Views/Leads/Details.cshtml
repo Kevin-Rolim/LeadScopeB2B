@@ -34,5 +34,5 @@
 }
 <h2 class="h5 mt-4">Histórico de revisões</h2>
 <table class="table"><thead><tr><th>Data (UTC)</th><th>Usuário</th><th>Decisão</th><th>Comentário</th></tr></thead><tbody>
-@foreach(var r in Model.Revisoes){<tr><td>@r.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@r.Usuarios.Nome</td><td>@r.Decisao</td><td>@r.Comentario</td></tr>}
+@foreach(var r in Model.Revisoes){<tr><td>@(r.DataHora?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td>@r.Usuarios.Nome</td><td>@r.Decisao</td><td>@r.Comentario</td></tr>}
 </tbody></table>

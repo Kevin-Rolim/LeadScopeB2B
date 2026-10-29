@@ -10,6 +10,6 @@ public class Cnaes
     public string Numero { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(300)]
+    [StringLength(255)]
     public string Descricao { get; set; } = string.Empty;
 }

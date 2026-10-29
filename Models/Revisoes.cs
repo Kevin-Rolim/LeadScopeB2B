@@ -11,7 +11,7 @@ public class Revisoes
 
     public string? Comentario { get; set; }
 
-    public DateTime DataHora { get; set; }
+    public DateTime? DataHora { get; set; }
 
     [Required]
     public int UsuarioId { get; set; }

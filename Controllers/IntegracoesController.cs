@@ -7,12 +7,34 @@ namespace LeadScopeB2B.Controllers;
 [Authorize(Policy = Acesso.Edicao)]
 public class IntegracoesController(IntegracaoService service) : Controller
 {
-    public async Task<IActionResult> Index(string? status = "PENDENTE") => View(await service.ListarAsync(CadastroRules.Limpar(status)));
-    [HttpPost]
-    public async Task<IActionResult> Revisar(int id, bool aprovar)
+    public async Task<IActionResult> Index() => View(await service.ListarAsync());
+
+    [HttpGet]
+    public async Task<IActionResult> Revisar(int id)
     {
-        await service.RevisarAsync(id, aprovar, User.UsuarioId());
-        TempData["Sucesso"] = "Evidência revisada.";
-        return RedirectToAction(nameof(Index));
+        var revisao = await service.ObterRevisaoColetaAsync(id);
+        return revisao is null ? NotFound() : View(revisao);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Revisar(int id, string? valorEsperado, bool aprovar)
+    {
+        var usuarioId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        try
+        {
+            await service.RevisarColetaAsync(id, valorEsperado, aprovar, usuarioId);
+            TempData["Sucesso"] = aprovar ? "Evidência aprovada e campo atualizado." : "Evidência rejeitada; cadastro preservado.";
+            var revisada = await service.ObterRevisaoColetaAsync(id);
+            if (revisada?.Dado.EmpresaId is int empresaId) return RedirectToAction("Details", "Empresas", new { id=empresaId });
+            if (revisada?.Dado.PessoaId is int pessoaId) return RedirectToAction("Details", "Pessoas", new { id=pessoaId });
+            return RedirectToAction(nameof(Index));
+        }
+        catch (KeyNotFoundException) { return NotFound(); }
+        catch (ConflitoException ex)
+        {
+            ModelState.AddModelError("", ex.Message);
+            var revisao = await service.ObterRevisaoColetaAsync(id);
+            return revisao is null ? NotFound() : View(revisao);
+        }
     }
 }

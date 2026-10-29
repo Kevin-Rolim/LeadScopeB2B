@@ -97,19 +97,4 @@ public class UsuariosController : Controller
             return View(model);
         }
     }
-    [HttpPost]
-    public async Task<IActionResult> AlterarBloqueio(int id, bool bloquear)
-    {
-        await _service.AlterarBloqueioAsync(id, bloquear);
-        TempData["Sucesso"] = bloquear ? "Usuário bloqueado e sessões revogadas." : "Usuário desbloqueado. É necessário entrar novamente.";
-        return RedirectToAction(nameof(Details), new { id });
-    }
-
-    [HttpPost, Authorize(Policy = Acesso.Admin)]
-    public async Task<IActionResult> Excluir(int id)
-    {
-        await _service.ExcluirAsync(id);
-        TempData["Sucesso"] = "Registro removido da lista de ativos.";
-        return RedirectToAction(nameof(Index));
-    }
 }

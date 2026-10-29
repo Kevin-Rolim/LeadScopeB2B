@@ -11,6 +11,7 @@ internal static class Erros
 {
     public static (int Status, string Mensagem) Classificar(Exception ex) => ex switch
     {
+        LeadScopeB2B.Integration.Universal.IntegracaoException => (400, ex.Message),
         ValidationException => (400, ex.Message),
         KeyNotFoundException => (404, ex.Message),
         ConflitoException => (409, ex.Message),

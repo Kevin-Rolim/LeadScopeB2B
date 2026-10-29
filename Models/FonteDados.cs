@@ -19,9 +19,7 @@ public class FonteDados
     [Range(0, 100)]
     public decimal? Confiabilidade { get; set; }
 
-    public bool Ativo { get; set; } = true;
+    public DateTime? DataHoraModificacao { get; set; }
 
-    public DateTime DataHoraMod { get; set; }
-
-    public DateTime? DataHoraDel { get; set; }
+    public DateTime? DataHoraExclusao { get; set; }
 }

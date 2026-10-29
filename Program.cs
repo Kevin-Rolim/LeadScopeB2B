@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using LeadScopeB2B.Integration.Universal;
 using LeadScopeB2B.Data;
 using LeadScopeB2B.Integration;
 using Microsoft.AspNetCore.DataProtection;
@@ -33,6 +34,7 @@ builder.Services.AddScoped<AuditoriaRepository>();
 builder.Services.AddScoped<ExportacaoRepository>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<EmpresaService>();
+builder.Services.AddScoped<EnriquecimentoEmpresaService>();
 builder.Services.AddScoped<PessoaService>();
 builder.Services.AddScoped<LeadService>();
 builder.Services.AddScoped<ContaService>();
@@ -43,12 +45,46 @@ builder.Services.AddSingleton<RecuperacaoToken>();
 builder.Services.AddSingleton<SolicitacoesRecuperacao>();
 builder.Services.AddScoped<RecuperacaoAcessoService>();
 builder.Services.AddHostedService<EnvioRecuperacaoWorker>();
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => { o.ValueCountLimit = 4096; o.MultipartBodyLengthLimit = 2 * 1024 * 1024; });
 var protection = builder.Services.AddDataProtection().SetApplicationName("LeadScopeB2B");
 if (builder.Configuration["DataProtection:DiretorioChaves"] is string keys && !string.IsNullOrWhiteSpace(keys))
     protection.PersistKeysToFileSystem(new DirectoryInfo(keys));
 builder.Services.AddScoped<CnaeService>();
 builder.Services.AddScoped<FonteDadosService>();
 builder.Services.AddScoped<IntegracaoService>();
+builder.Services.AddOptions<MotorIntegracoesOptions>().Bind(builder.Configuration.GetSection("MotorIntegracoes"))
+    .PostConfigure(o => {
+        if (!string.IsNullOrWhiteSpace(o.RedesPrivadasJson))
+        {
+            if (o.RedesPrivadasJson.Length > 32768) throw new InvalidOperationException("Configuração de rede de integrações muito grande.");
+            o.RedesPrivadas = System.Text.Json.JsonSerializer.Deserialize<List<PerfilRedeApi>>(o.RedesPrivadasJson, IntegracaoArquivoRepository.Json)
+                ?? throw new InvalidOperationException("Configuração de rede de integrações inválida.");
+        }
+    })
+    .Validate(o => o.RedesPrivadas.Count <= 20 && o.RedesPrivadas.All(p => p.Id != "publica" && System.Text.RegularExpressions.Regex.IsMatch(p.Id, "^[a-zA-Z0-9_-]{1,60}$") && p.Origens.Count is > 0 and <= 20 && p.Redes.Count is > 0 and <= 20 && p.Redes.All(c => System.Net.IPNetwork.TryParse(c, out _)) && p.Origens.All(s => Uri.TryCreate(s, UriKind.Absolute, out var u) && (u.Scheme == "https" || p.PermitirHttp && u.Scheme == "http") && u.UserInfo.Length == 0)) && o.RedesPrivadas.Select(p=>p.Id).Distinct().Count()==o.RedesPrivadas.Count, "Perfis de rede de integrações inválidos.")
+    .Validate(o => !Path.GetFullPath(o.Diretorio).StartsWith(Path.GetFullPath(builder.Environment.WebRootPath ?? "wwwroot") + Path.DirectorySeparatorChar, StringComparison.Ordinal), "Armazenamento de integrações deve ficar fora da raiz pública.")
+    .ValidateOnStart();
+builder.Services.AddSingleton<IntegracaoArquivoRepository>();
+builder.Services.AddSingleton<DestinosHttp>();
+builder.Services.AddSingleton<ControleExecucaoApi>();
+builder.Services.AddSingleton<IImportadorApi, ImportadorApi>();
+builder.Services.AddSingleton<ICatalogoApis, CatalogoApis>();
+builder.Services.AddSingleton<IMapeadorApi, MapeadorApi>();
+builder.Services.AddSingleton<ConsumoIntegracaoService>();
+builder.Services.AddSingleton<IConsumoApi>(sp => sp.GetRequiredService<ConsumoIntegracaoService>());
+builder.Services.AddHttpClient("Integracoes", client => client.Timeout = Timeout.InfiniteTimeSpan)
+    .ConfigurePrimaryHttpMessageHandler(sp => new SocketsHttpHandler {
+        AllowAutoRedirect = false, UseCookies = false, UseProxy = false,
+        ConnectCallback = sp.GetRequiredService<DestinosHttp>().ConectarAsync,
+        PooledConnectionLifetime = TimeSpan.Zero, MaxResponseHeadersLength = 32
+    }).RemoveAllLoggers();
+builder.Services.AddSingleton<ApiHttpService>();
+builder.Services.AddSingleton<AutenticacaoIntegracaoService>();
+builder.Services.AddSingleton<IAutenticacaoApi>(sp => sp.GetRequiredService<AutenticacaoIntegracaoService>());
+builder.Services.AddScoped<IExecutorApi, ExecutorIntegracaoService>();
+builder.Services.AddScoped<GerenciadorIntegracaoService>();
+builder.Services.AddScoped<AutomacaoIntegracaoService>();
+builder.Services.AddHostedService<ColetaAutomaticaWorker>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<ExportacaoService>();
 builder.Services.AddScoped<SessaoEvents>();

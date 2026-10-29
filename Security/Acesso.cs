@@ -14,12 +14,12 @@ public static class Acesso
     public const string Admin = "Admin";
     public static string? Papel(Usuarios usuario) => usuario.PerfisAcesso.ConjuntoPermissoes.Nome switch
     {
-        "Administracao" or "Admin" => "ADMIN",
-        "Operacao Comercial" or "Gestor" => "OPERACAO",
+        "Admin" => "ADMIN",
+        "Gestor" => "OPERACAO",
         "Leitura" => "LEITURA",
         _ => null
     };
-    public static string Versao(Usuarios usuario) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{usuario.Senha}:{usuario.VersaoSessao}")));
+    public static string Versao(Usuarios usuario) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{usuario.SenhaHash}:{usuario.Nome}:{usuario.Email}:{usuario.PerfilAcessoId}")));
     public static ClaimsPrincipal Principal(Usuarios usuario, string scheme)
     {
         var role = Papel(usuario) ?? throw new InvalidOperationException("Conjunto de permissões não reconhecido.");
@@ -31,14 +31,14 @@ public static class Acesso
     public static int UsuarioId(this ClaimsPrincipal user) => int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }
 
-// Revalida bloqueio, exclusão, troca de senha e perfil a cada requisição.
+// Revalida os dados da conta e o perfil a cada requisição.
 public class SessaoEvents(IUsuarioRepository usuarios) : CookieAuthenticationEvents
 {
     public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)
     {
         if (!int.TryParse(context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var id)) { context.RejectPrincipal(); return; }
         var usuario = await usuarios.ObterPorIdAsync(id);
-        if (usuario is null || usuario.Status != "ATIVO" || Acesso.Papel(usuario) is null || context.Principal?.FindFirstValue("versao") != Acesso.Versao(usuario))
+        if (usuario is null || Acesso.Papel(usuario) is null || context.Principal?.FindFirstValue("versao") != Acesso.Versao(usuario))
         {
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync();

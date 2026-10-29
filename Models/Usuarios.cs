@@ -18,15 +18,10 @@ public class Usuarios
     [Required]
     [StringLength(255)]
     [System.Text.Json.Serialization.JsonIgnore]
-    public string Senha { get; set; } = string.Empty;
+    public string SenhaHash { get; set; } = string.Empty;
 
     [Required]
     public int PerfilAcessoId { get; set; }
-
-    [System.Text.Json.Serialization.JsonIgnore]
-    public long VersaoSessao { get; set; }
-
-    public string Status { get; set; } = "ATIVO";
 
     public PerfisAcesso PerfisAcesso { get; set; } = null!;
 }

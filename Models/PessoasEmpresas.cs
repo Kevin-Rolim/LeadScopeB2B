@@ -37,7 +37,7 @@ public class PessoasEmpresas
     [StringLength(100)]
     public string? FonteVinculo { get; set; }
 
-    public DateTime? DataVerif { get; set; }
+    public DateTime? DataVerificacao { get; set; }
 
     public ICollection<Revisoes> Revisoes { get; set; } = new List<Revisoes>();
 

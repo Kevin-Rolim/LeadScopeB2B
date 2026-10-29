@@ -1,0 +1,29 @@
+@model LeadScopeB2B.ViewModels.Integracoes.ExecutarApiForm
+@{ ViewData["Title"]="Teste controlado de API"; }
+<h1 class="h3">@Model.Integracao.Contrato.Provedor · @Model.Operacao.Nome</h1>
+<p><strong>@Model.Operacao.Metodo</strong> @Model.Operacao.Caminho</p>
+<p>Este teste realiza uma consulta real ao enviar o formulário. Usa os mesmos controles de autenticação, consumo e segurança da automação.</p>
+<p>@(Model.Operacao.Custo.PorRequisicao==0 && Model.Operacao.Custo.PorItem==0?"Sem custo por chamada declarado no contrato.":Model.Operacao.Custo.PorRequisicao is null || Model.Operacao.Custo.PorItem is null?"Preço não informado pelo provedor. A consulta pode consumir créditos ou gerar cobrança.":$"Custo informado por requisição: {Model.Operacao.Custo.PorRequisicao}; por item: {Model.Operacao.Custo.PorItem} {Model.Integracao.Contrato.Plano.Moeda}.")</p>
+@if(LeadScopeB2B.Integration.Universal.ValidacaoContrato.Escrita(Model.Operacao)){<div class="alert alert-warning">Esta operação pode criar, alterar ou excluir informações no serviço externo. Não há repetição automática de escrita.</div>}
+<form asp-action="Executar" method="post"><input asp-for="Id" type="hidden"/><input asp-for="OperacaoId" type="hidden"/>
+@foreach(var p in Model.Operacao.Parametros){
+<label class="form-label d-block">@p.Nome · @p.Local · @p.Tipo @(p.Obrigatorio?"(obrigatório)":"")
+@if(p.Valores.Count>0){<select class="form-select" name="Parametros[@p.Nome]">@foreach(var v in p.Valores){<option value="@v" selected="@(Model.Parametros.GetValueOrDefault(p.Nome)==v)">@v</option>}</select>}
+else if(p.Tipo=="boolean"){<select class="form-select" name="Parametros[@p.Nome]"><option value="">Não informado</option><option>true</option><option>false</option></select>}
+else if(p.Tipo is "object" or "array"){<textarea class="form-control font-monospace" name="Parametros[@p.Nome]">@Model.Parametros.GetValueOrDefault(p.Nome)</textarea>}
+else{<input class="form-control" name="Parametros[@p.Nome]" value="@Model.Parametros.GetValueOrDefault(p.Nome)" maxlength="@p.MaxComprimento"/>}
+@if(p.CampoOrigem!=""){<small>Preenchido a partir de @p.CampoOrigem ao selecionar destino.</small>}
+</label>}
+<div class="row g-3"><div class="col-md-6"><label asp-for="EmpresaId">ID da empresa existente (opcional)</label><input asp-for="EmpresaId" class="form-control" type="number" min="1"/></div><div class="col-md-6"><label asp-for="PessoaId">ID da pessoa existente (opcional)</label><input asp-for="PessoaId" class="form-control" type="number" min="1"/></div></div>
+<label class="d-block mt-3"><input asp-for="PersistirEvidencias"/> Persistir os campos mapeados como evidências para revisão (um destino, um item, sem paginação).</label>
+<label class="d-block"><input asp-for="AutorizarEscrita"/> Autorizo explicitamente a escrita externa nesta execução.</label>@if(Model.Operacao.Custo.PorRequisicao is null || Model.Operacao.Custo.PorItem is null){<label class="d-block"><input asp-for="AutorizarCustoDesconhecido"/> Autorizo esta consulta com custo não informado pelo provedor.</label>}
+@if(Model.Operacao.Custo.PorRequisicao is >0 || Model.Operacao.Custo.PorItem is >0 || Model.Operacao.Custo.ReservaCustoDesconhecido is >0){<label class="d-block"><input asp-for="AutorizarCusto"/> Autorizo o consumo cobrado desta operação.</label>}
+<button class="btn btn-primary mt-3">Executar requisição autorizada</button>
+</form>
+@if(Model.Resultado is { } r){
+<div class="alert @(r.Sucesso?"alert-success":"alert-warning") mt-3">@r.Codigo: @r.Mensagem HTTP @r.HttpStatus · Evidências: @r.Evidencias</div>
+@foreach(var aviso in r.Avisos){<p>@aviso</p>}
+@if(r.Itens.Count>0){<table class="table"><thead><tr><th>Destino lógico</th><th>Valor normalizado</th></tr></thead><tbody>@foreach(var item in r.Itens){foreach(var p in item){<tr><td>@p.Key</td><td>@p.Value</td></tr>}}</tbody></table>}
+@if(r.AmostraJson!=""){<details><summary>Amostra da resposta (limitada; segredos omitidos)</summary><pre>@r.AmostraJson</pre></details>}
+}
+<a asp-action="Configurar" asp-route-id="@Model.Id">Voltar à configuração</a>

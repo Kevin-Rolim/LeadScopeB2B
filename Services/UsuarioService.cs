@@ -25,7 +25,6 @@ public class UsuarioService
             Id = u.Id,
             Nome = u.Nome,
             Email = u.Email,
-            Status = u.Status,
             PerfilAcesso = u.PerfisAcesso.Nome
         }).ToList();
     }
@@ -43,7 +42,6 @@ public class UsuarioService
             Id = usuario.Id,
             Nome = usuario.Nome,
             Email = usuario.Email,
-            Status = usuario.Status,
             PerfilAcesso = usuario.PerfisAcesso.Nome
         };
     }
@@ -72,7 +70,6 @@ public class UsuarioService
             Nome = usuario.Nome,
             Email = usuario.Email,
             PerfilAcessoId = usuario.PerfilAcessoId,
-            Status = usuario.Status
         };
         await PrepararFormularioAsync(model);
         return model;
@@ -90,7 +87,7 @@ public class UsuarioService
             Email = email,
             PerfilAcessoId = model.PerfilAcessoId
         };
-        usuario.Senha = _passwordHasher.HashPassword(usuario, model.Senha);
+        usuario.SenhaHash = _passwordHasher.HashPassword(usuario, model.Senha);
 
         await _repository.AdicionarAsync(usuario);
     }
@@ -107,28 +104,12 @@ public class UsuarioService
         usuario.Nome = model.Nome.Trim();
         usuario.Email = email;
         usuario.PerfilAcessoId = model.PerfilAcessoId;
-        usuario.Status = CadastroRules.Estado(model.Status, "ATIVO", "BLOQUEADO", "DESATIVADO");
 
         if (!string.IsNullOrWhiteSpace(model.NovaSenha))
         {
-            usuario.Senha = _passwordHasher.HashPassword(usuario, model.NovaSenha);
+            usuario.SenhaHash = _passwordHasher.HashPassword(usuario, model.NovaSenha);
         }
 
-        await _repository.AtualizarAsync(usuario);
-    }
-
-    public async Task AlterarBloqueioAsync(int id, bool bloquear)
-    {
-        var usuario = await _repository.ObterPorIdAsync(id) ?? throw new KeyNotFoundException("Usuário não encontrado.");
-        if (usuario.Status == "DESATIVADO") throw new ConflitoException("Reative a conta pela edição antes de alterar seu bloqueio.");
-        usuario.Status = bloquear ? "BLOQUEADO" : "ATIVO";
-        await _repository.AtualizarAsync(usuario);
-    }
-
-    public async Task ExcluirAsync(int id)
-    {
-        var usuario = await _repository.ObterPorIdAsync(id) ?? throw new KeyNotFoundException("Usuário não encontrado.");
-        usuario.Status = "DESATIVADO";
         await _repository.AtualizarAsync(usuario);
     }
 
@@ -137,7 +118,7 @@ public class UsuarioService
         var model = new UsuarioCreateViewModel { Nome = nome, Email = email, Senha = senha, PerfilAcessoId = 1 };
         CadastroRules.Validar(model);
         var usuario = new Usuarios { Nome = nome.Trim(), Email = NormalizarEmail(email) };
-        usuario.Senha = _passwordHasher.HashPassword(usuario, senha);
+        usuario.SenhaHash = _passwordHasher.HashPassword(usuario, senha);
         await _repository.CriarAdministradorInicialAsync(usuario);
     }
 

@@ -75,7 +75,7 @@ public class PessoaService
         var pessoa = await _repository.ObterAtivaPorIdAsync(id)
             ?? throw new KeyNotFoundException("Pessoa não encontrada.");
 
-        pessoa.DataDel = DateTime.UtcNow;
+        pessoa.DataExclusao = DateTime.UtcNow;
         pessoa.Status = "REMOVIDO";
         await _repository.AtualizarAsync(pessoa);
     }
@@ -85,7 +85,7 @@ public class PessoaService
         pessoa.Nome = model.Nome.Trim();
         pessoa.Email = Limpar(model.Email)?.ToLowerInvariant();
         pessoa.Telefone = Limpar(model.Telefone);
-        pessoa.UrlLinkedin = CadastroRules.Url(model.UrlLinkedin)?.TrimEnd('/').ToLowerInvariant();
+        pessoa.UrlLinkedIn = CadastroRules.Url(model.UrlLinkedIn)?.TrimEnd('/').ToLowerInvariant();
         var status = CadastroRules.Estado(model.Status, "PENDENTE", "VALIDADO");
         pessoa.Status = pessoa.DataBloqueio.HasValue ? "BLOQUEADO" : status;
         pessoa.Origem = Limpar(model.Origem);
@@ -97,7 +97,7 @@ public class PessoaService
         Nome = pessoa.Nome,
         Email = pessoa.Email,
         Telefone = pessoa.Telefone,
-        UrlLinkedin = pessoa.UrlLinkedin,
+        UrlLinkedIn = pessoa.UrlLinkedIn,
         Status = pessoa.DataBloqueio.HasValue ? "PENDENTE" : pessoa.Status ?? "PENDENTE",
         Origem = pessoa.Origem
     };
@@ -108,7 +108,7 @@ public class PessoaService
         Nome = pessoa.Nome,
         Email = pessoa.Email,
         Telefone = pessoa.Telefone,
-        UrlLinkedin = pessoa.UrlLinkedin,
+        UrlLinkedIn = pessoa.UrlLinkedIn,
         Status = pessoa.Status ?? "PENDENTE",
         Origem = pessoa.Origem,
         DataColeta = pessoa.DataColeta,

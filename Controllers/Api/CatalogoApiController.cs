@@ -45,14 +45,14 @@ public class CatalogoApiController(EmpresaService empresas, PessoaService pessoa
     {
         var fonte = int.Parse(User.FindFirst("fonte")!.Value);
         var id = await integracao.ReceberAsync(model, fonte, User.UsuarioId());
-        return AcceptedAtAction(nameof(Dado), new { id }, new { id, status = "PENDENTE" });
+        return CreatedAtAction(nameof(Dado), new { id }, new { id });
     }
     [HttpGet("integracoes/dados/{id:int}")]
     public async Task<IActionResult> Dado(int id)
     {
         var dado = await integracao.ObterDaFonteAsync(id, int.Parse(User.FindFirst("fonte")!.Value));
         if (dado is null) return NotFound();
-        return Ok(new { dado.Id, dado.PessoaId, dado.EmpresaId, dado.Campo, dado.Valor, dado.ValorNormalizado, dado.StatusValidacao, dado.NivelConfianca, dado.DataColeta });
+        return Ok(new { dado.Id, dado.PessoaId, dado.EmpresaId, dado.Campo, dado.Valor, dado.NivelConfianca });
     }
     [HttpPost("integracoes/leads"), Authorize(Policy = "EnvioIntegracao"), RequestSizeLimit(32768)]
     public async Task<IActionResult> ReceberLead(LeadRecebido model)

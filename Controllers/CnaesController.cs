@@ -15,9 +15,9 @@ public class CnaesController(CnaeService service) : Controller
         return RedirectToAction(nameof(Index));
     }
     [HttpPost, Authorize(Policy = Acesso.Edicao)]
-    public async Task<IActionResult> Associar(int empresaId, string numero, bool principal)
+    public async Task<IActionResult> Associar(int empresaId, string numero)
     {
-        await service.AssociarAsync(empresaId, numero, principal);
+        await service.AssociarAsync(empresaId, numero);
         return RedirectToAction("Details", "Empresas", new { id = empresaId });
     }
     [HttpPost, Authorize(Policy = Acesso.Edicao)]

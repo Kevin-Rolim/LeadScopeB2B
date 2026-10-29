@@ -8,11 +8,11 @@ public class Logs
 
     [Required]
     [StringLength(50)]
-    public string TiporEvento { get; set; } = string.Empty;
+    public string TipoEvento { get; set; } = string.Empty;
 
     public string? DescricaoEvento { get; set; }
 
-    public DateTime DataHora { get; set; }
+    public DateTime? DataHora { get; set; }
 
     public string? DadosAlterados { get; set; }
 

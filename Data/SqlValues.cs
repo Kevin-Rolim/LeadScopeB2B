@@ -4,7 +4,7 @@ namespace LeadScopeB2B.Data;
 
 internal static class SqlValues
 {
-    public static SqlParameter Text(string name, string? value, int size = -1) => new(name, SqlDbType.NVarChar, size) { Value = (object?)value ?? DBNull.Value };
+    public static SqlParameter Text(string name, string? value, int size = -1) => new(name, SqlDbType.VarChar, size) { Value = (object?)value ?? DBNull.Value };
     public static SqlParameter Int(string name, int? value) => new(name, SqlDbType.Int) { Value = (object?)value ?? DBNull.Value };
     public static SqlParameter Long(string name, long value) => new(name, SqlDbType.BigInt) { Value = value };
     public static SqlParameter Bit(string name, bool value) => new(name, SqlDbType.Bit) { Value = value };

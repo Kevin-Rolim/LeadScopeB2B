@@ -36,7 +36,7 @@ public class IntegracaoAuthenticationHandler(IOptionsMonitor<AuthenticationSchem
         }
         if (match is null) return AuthenticateResult.Fail("Chave inválida.");
         var usuario = await usuarios.ObterPorIdAsync(match.UsuarioId);
-        if (usuario is null || usuario.Status != "ATIVO" || Acesso.Papel(usuario) is null) return AuthenticateResult.Fail("Usuário indisponível.");
+        if (usuario is null || Acesso.Papel(usuario) is null) return AuthenticateResult.Fail("Usuário indisponível.");
         var principal = Acesso.Principal(usuario, Acesso.Api);
         var identity = (ClaimsIdentity)principal.Identity!;
         identity.AddClaim(new("fonte", match.FonteDadosId.ToString()));

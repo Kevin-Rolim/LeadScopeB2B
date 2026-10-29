@@ -3,8 +3,8 @@
 <h1 class="h3">Fontes de dados</h1>
 <table class="table table-striped"><thead><tr><th>ID</th><th>Nome</th><th>Tipo</th><th>Confiabilidade</th><th>Situação</th><th>Ação</th></tr></thead><tbody>
 @foreach(var f in Model) {
-<tr><td>@f.Id</td><td>@f.Nome</td><td>@f.Tipo</td><td>@f.Confiabilidade</td><td>@(f.Ativo?"Ativa":"Inativa")</td><td>
-<form asp-action="AlterarAtivo" method="post"><input name="id" value="@f.Id" type="hidden" /><input name="ativo" value="@(!f.Ativo ? "true":"false")" type="hidden" /><button class="btn btn-sm btn-outline-secondary">@(f.Ativo?"Desativar":"Reativar")</button></form>
+<tr><td>@f.Id</td><td>@f.Nome</td><td>@f.Tipo</td><td>@f.Confiabilidade</td><td>@((f.DataHoraExclusao is null)?"Ativa":"Inativa")</td><td>
+<form asp-action="AlterarAtivo" method="post"><input name="id" value="@f.Id" type="hidden" /><input name="ativo" value="@(!(f.DataHoraExclusao is null) ? "true":"false")" type="hidden" /><button class="btn btn-sm btn-outline-secondary">@((f.DataHoraExclusao is null)?"Desativar":"Reativar")</button></form>
 </td></tr>
 }
 </tbody></table>

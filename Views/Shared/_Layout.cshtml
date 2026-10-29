@@ -33,10 +33,11 @@
                             <a class="nav-link text-dark" asp-controller="Pessoas" asp-action="Index">Pessoas</a>
                         </li>
                         @if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) {
-                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Integracoes" asp-action="Index">Revisar dados</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Integracoes" asp-action="Index">Dados coletados</a></li>
                         }
                         @if(User.IsInRole("ADMIN")) {
                             <li class="nav-item"><a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Index">Usuários</a></li>
+                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="IntegracoesApis" asp-action="Index">Integrações e APIs</a></li>
                             <li class="nav-item"><a class="nav-link text-dark" asp-controller="Fontes" asp-action="Index">Fontes</a></li>
                             <li class="nav-item"><a class="nav-link text-dark" asp-controller="Auditoria" asp-action="Index">Auditoria</a></li>
                         }

@@ -35,12 +35,12 @@ public class RecuperacaoAcessoService(IUsuarioRepository usuarios, IPasswordHash
         if (!fila.Enfileirar(model.Email.Trim().ToLowerInvariant())) throw new ConflitoException("A recuperação está ocupada no momento. Tente novamente mais tarde.");
     }
 
-    // Executado apenas pelo worker. Sem conta ativa, não envia mensagem e não altera o usuário.
+    // Executado apenas pelo worker para contas com perfil reconhecido.
     public async Task EnviarAsync(string endereco, CancellationToken ct)
     {
         if (!Disponivel) throw new InvalidOperationException("Recuperação indisponível.");
         var usuario = await usuarios.ObterPorEmailAsync(endereco);
-        if (usuario is null || usuario.Status != "ATIVO" || Acesso.Papel(usuario) is null) return;
+        if (usuario is null || Acesso.Papel(usuario) is null) return;
         var link = UrlPublica()!.AbsoluteUri.TrimEnd('/') + "/Conta/RedefinirSenha?token=" + Uri.EscapeDataString(tokens.Criar(usuario));
         await email.EnviarAsync(usuario.Email, link, ct);
         await auditoria.RegistrarAsync(usuario.Id, "RECUPERACAO_EMAIL", "SMTP aceitou a mensagem de recuperação de acesso.");
@@ -51,7 +51,7 @@ public class RecuperacaoAcessoService(IUsuarioRepository usuarios, IPasswordHash
         var payload = tokens.Ler(token);
         if (payload is null) return null;
         var usuario = await usuarios.ObterPorIdAsync(payload.UsuarioId);
-        return usuario is { Status: "ATIVO" } && Acesso.Papel(usuario) is not null
+        return usuario is not null && Acesso.Papel(usuario) is not null
             && string.Equals(usuario.Email, payload.Email, StringComparison.OrdinalIgnoreCase)
             && string.Equals(Acesso.Versao(usuario), payload.Versao, StringComparison.Ordinal) ? usuario : null;
     }
@@ -61,8 +61,8 @@ public class RecuperacaoAcessoService(IUsuarioRepository usuarios, IPasswordHash
     {
         CadastroRules.Validar(model);
         var usuario = await ObterUsuarioAsync(model.Token) ?? throw new ValidationException(MensagemTokenInvalido);
-        // O UPDATE compara hash e versão: duas requisições não conseguem consumir o mesmo link.
-        if (!await usuarios.AtualizarSenhaAsync(usuario.Id, usuario.Email, usuario.Senha, usuario.VersaoSessao,
+        // O UPDATE compara o hash anterior: duas requisições não conseguem consumir o mesmo link.
+        if (!await usuarios.AtualizarSenhaAsync(usuario.Id, usuario.Email, usuario.SenhaHash,
             hasher.HashPassword(usuario, model.NovaSenha), "RECUPERACAO_SENHA")) throw new ValidationException(MensagemTokenInvalido);
     }
 }

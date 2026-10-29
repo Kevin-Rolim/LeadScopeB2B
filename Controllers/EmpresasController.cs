@@ -9,11 +9,13 @@ public class EmpresasController : Controller
 {
     private readonly EmpresaService _service;
     private readonly CnaeService _cnaes;
+    private readonly EnriquecimentoEmpresaService _enriquecimento;
 
-    public EmpresasController(EmpresaService service, CnaeService cnaes)
+    public EmpresasController(EmpresaService service, CnaeService cnaes, EnriquecimentoEmpresaService enriquecimento)
     {
         _service = service;
         _cnaes = cnaes;
+        _enriquecimento = enriquecimento;
     }
 
     public async Task<IActionResult> Index(string? busca, string? status, string? cnae)
@@ -26,7 +28,20 @@ public class EmpresasController : Controller
         var empresa = await _service.ObterDetalhesAsync(id);
         if (empresa is null) return NotFound();
         empresa.Cnaes = await _cnaes.ListarDaEmpresaAsync(id);
+        empresa.Enriquecimento = await _enriquecimento.ObterAsync(id, HttpContext.RequestAborted);
         return View(empresa);
+    }
+
+    [HttpPost, Authorize(Policy = Acesso.Admin), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Enriquecer(int id, Guid integracaoId, string operacaoId, bool autorizarConsumo)
+    {
+        try
+        {
+            var resultado = await _enriquecimento.EnriquecerAsync(id, integracaoId, operacaoId, autorizarConsumo, User.UsuarioId(), HttpContext.RequestAborted);
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+        }
+        catch (LeadScopeB2B.Integration.Universal.IntegracaoException ex) { TempData["Erro"] = ex.Message; }
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [Authorize(Policy = Acesso.Edicao)]

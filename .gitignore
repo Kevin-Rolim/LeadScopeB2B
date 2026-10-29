@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # VS Code - configurações locais
 .vscode/
+
+# Configurações operacionais e segredos privados de integrações
+App_Data/

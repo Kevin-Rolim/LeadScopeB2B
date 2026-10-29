@@ -1,0 +1,8 @@
+.git/
+.vs/
+**/bin/
+**/obj/
+.env
+**/*.bak
+**/*.bacpac
+App_Data/

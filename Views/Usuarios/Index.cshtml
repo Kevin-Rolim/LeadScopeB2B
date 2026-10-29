@@ -18,7 +18,7 @@
             <tr>
                 <th>Nome</th>
                 <th>E-mail</th>
-                <th>Situação</th><th>Perfil</th>
+                <th>Perfil</th>
                 <th class="text-end">Ações</th>
             </tr>
         </thead>
@@ -28,7 +28,7 @@
             <tr>
                 <td>@usuario.Nome</td>
                 <td>@usuario.Email</td>
-                <td>@usuario.Status</td><td>@usuario.PerfilAcesso</td>
+                <td>@usuario.PerfilAcesso</td>
                 <td class="text-end">
                     <a asp-action="Details" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
                     @if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Edit" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-primary">Editar</a> }

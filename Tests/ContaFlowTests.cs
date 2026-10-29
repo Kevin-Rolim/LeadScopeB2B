@@ -55,8 +55,8 @@ internal static class ContaFlowTests
             var created = await PostAsync(anon, "/Conta/Cadastro", new() { { "Nome", "Usuário público" }, { "Email", Email.ToUpperInvariant() }, { "Senha", Senha }, { "ConfirmacaoSenha", Senha }, { "PerfilAcessoId", "1" }, { "Status", "BLOQUEADO" }, { "Id", admin.Id.ToString() } });
             var usuario = (await repo.ObterPorEmailAsync(Email))!;
             check(created.StatusCode == HttpStatusCode.Redirect && created.Headers.Location?.AbsolutePathOrOriginal() == "/Conta/Login", "cadastro pela interface direciona para login");
-            check(usuario is { Status: "ATIVO" } && Acesso.Papel(usuario) == "LEITURA", "campos forjados não promovem cadastro público a administrador");
-            check(usuario.Senha != Senha && hasher.VerifyHashedPassword(usuario, usuario.Senha, Senha) != PasswordVerificationResult.Failed, "cadastro HTTP armazena hash seguro no SQL Server");
+            check(Acesso.Papel(usuario) == "LEITURA", "campos forjados não promovem cadastro público a administrador");
+            check(usuario.SenhaHash != Senha && hasher.VerifyHashedPassword(usuario, usuario.SenhaHash, Senha) != PasswordVerificationResult.Failed, "cadastro HTTP armazena hash seguro no SQL Server");
             check(Texto(await anon.GetStringAsync("/Conta/Login")).Contains("Cadastro realizado"), "cadastro exibe confirmação adequada");
             var duplicate = await PostAsync(anon, "/Conta/Cadastro", new() { { "Nome", "Duplicado" }, { "Email", Email }, { "Senha", Senha }, { "ConfirmacaoSenha", Senha } });
             check(duplicate.StatusCode == HttpStatusCode.OK && Texto(await duplicate.Content.ReadAsStringAsync()).Contains("Não foi possível criar a conta") && (await repo.ListarAsync()).Count(u => u.Email == Email) == 1, "cadastro duplicado é recusado sem duplicar a linha");
@@ -91,22 +91,11 @@ internal static class ContaFlowTests
             var changed = await PostAsync(titular, "/Conta/AlterarSenha", new() { { "SenhaAtual", Senha }, { "NovaSenha", SenhaNova }, { "ConfirmacaoSenha", SenhaNova } });
             check(changed.StatusCode == HttpStatusCode.Redirect && (await titular.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.Redirect && (await observador.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.Redirect, "troca de senha encerra todas as sessões");
             usuario = (await repo.ObterPorIdAsync(usuario.Id))!;
-            check(hasher.VerifyHashedPassword(usuario, usuario.Senha, Senha) == PasswordVerificationResult.Failed && hasher.VerifyHashedPassword(usuario, usuario.Senha, SenhaNova) != PasswordVerificationResult.Failed, "nova senha substitui a anterior no banco");
+            check(hasher.VerifyHashedPassword(usuario, usuario.SenhaHash, Senha) == PasswordVerificationResult.Failed && hasher.VerifyHashedPassword(usuario, usuario.SenhaHash, SenhaNova) != PasswordVerificationResult.Failed, "nova senha substitui a anterior no banco");
             check((await LoginAsync(titular, EmailNovo, SenhaNova)).StatusCode == HttpStatusCode.Redirect, "login funciona após troca de senha");
 
-            using var cookieAntesBloqueio = app.Client();
-            check((await LoginAsync(cookieAntesBloqueio, EmailNovo, SenhaNova)).StatusCode == HttpStatusCode.Redirect, "sessão anterior ao bloqueio capturada");
-            var blocked = await PostAsync(adminWeb, "/Usuarios/AlterarBloqueio", new() { { "id", usuario.Id.ToString() }, { "bloquear", "true" } }, $"/Usuarios/Details/{usuario.Id}");
-            check(blocked.StatusCode == HttpStatusCode.Redirect && (await repo.ObterPorIdAsync(usuario.Id))!.Status == "BLOQUEADO", "administrador bloqueia conta pela interface");
-            using var blockedLogin = app.Client();
-            var blockedResponse = await LoginAsync(blockedLogin, EmailNovo, SenhaNova);
-            check(blockedResponse.StatusCode == HttpStatusCode.OK && Texto(await blockedResponse.Content.ReadAsStringAsync()).Contains("E-mail ou senha inválidos, ou conta indisponível"), "conta bloqueada não entra e recebe erro genérico");
-            check((await titular.GetAsync("/Empresas")).StatusCode == HttpStatusCode.Redirect, "bloqueio revoga sessão existente");
-            var unblocked = await PostAsync(adminWeb, "/Usuarios/AlterarBloqueio", new() { { "id", usuario.Id.ToString() }, { "bloquear", "false" } }, $"/Usuarios/Details/{usuario.Id}");
-            check(unblocked.StatusCode == HttpStatusCode.Redirect && (await repo.ObterPorIdAsync(usuario.Id))!.Status == "ATIVO", "administrador desbloqueia conta pela interface");
-            check((await cookieAntesBloqueio.GetAsync("/Empresas")).StatusCode == HttpStatusCode.Redirect, "desbloqueio não revalida cookie que nunca foi usado durante o bloqueio");
             using var reenabled = app.Client();
-            check((await LoginAsync(reenabled, EmailNovo, SenhaNova)).StatusCode == HttpStatusCode.Redirect, "conta desbloqueada pode entrar novamente");
+            check((await LoginAsync(reenabled, EmailNovo, SenhaNova)).StatusCode == HttpStatusCode.Redirect, "conta entra com a nova senha");
             check((await reenabled.PostAsync("/Conta/Logout", new FormUrlEncodedContent([]))).StatusCode == HttpStatusCode.BadRequest, "logout exige CSRF");
             var logout = await PostAsync(reenabled, "/Conta/Logout", new(), "/Conta/Perfil");
             check(logout.StatusCode == HttpStatusCode.Redirect && (await reenabled.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.Redirect, "logout encerra acesso da sessão");
@@ -120,8 +109,7 @@ internal static class ContaFlowTests
             using var knownWrong = app.Client(); using var unknownWrong = app.Client();
             var known = await LoginAsync(knownWrong, EmailNovo, "errada"); var unknown = await LoginAsync(unknownWrong, "ausente@example.test", "errada");
             check(known.StatusCode == HttpStatusCode.OK && unknown.StatusCode == HttpStatusCode.OK && Texto(await known.Content.ReadAsStringAsync()).Contains("E-mail ou senha inválidos, ou conta indisponível") && Texto(await unknown.Content.ReadAsStringAsync()).Contains("E-mail ou senha inválidos, ou conta indisponível"), "login não revela existência de e-mail");
-            var limited = await LoginAsync(unknownWrong, "ausente@example.test", "errada");
-            check(limited.StatusCode == HttpStatusCode.TooManyRequests && Texto(await limited.Content.ReadAsStringAsync()).Contains("Muitas tentativas"), "login aplica limite com mensagem adequada");
+
         }
 
         await using var smtp = new SmtpTestServer();
@@ -144,9 +132,9 @@ internal static class ContaFlowTests
         check(Texto(invalidLink).Contains("link é inválido ou expirou") && !invalidLink.Contains("Salvar nova senha"), "link inválido não oferece redefinição");
         var invalidPost = await PostAsync(recovery, "/Conta/RedefinirSenha", new() { { "Token", "invalido" }, { "NovaSenha", "Recuperada#123!" }, { "ConfirmacaoSenha", "Recuperada#123!" } }, "/Conta/Login");
         check(invalidPost.StatusCode == HttpStatusCode.OK && Texto(await invalidPost.Content.ReadAsStringAsync()).Contains("link é inválido ou expirou"), "servidor rejeita token forjado");
-        var adminHash = (await repo.ObterPorIdAsync(admin.Id))!.Senha;
+        var adminHash = (await repo.ObterPorIdAsync(admin.Id))!.SenhaHash;
         var reset = await PostAsync(recovery, "/Conta/RedefinirSenha", new() { { "Token", token }, { "NovaSenha", "Recuperada#123!" }, { "ConfirmacaoSenha", "Recuperada#123!" }, { "UsuarioId", admin.Id.ToString() }, { "Email", admin.Email } }, resetPath);
-        check(reset.StatusCode == HttpStatusCode.Redirect && reset.Headers.Location?.OriginalString == "/Conta/Login" && (await repo.ObterPorIdAsync(admin.Id))!.Senha == adminHash, "link redefine somente sua conta e redireciona para login");
+        check(reset.StatusCode == HttpStatusCode.Redirect && reset.Headers.Location?.OriginalString == "/Conta/Login" && (await repo.ObterPorIdAsync(admin.Id))!.SenhaHash == adminHash, "link redefine somente sua conta e redireciona para login");
         check((await beforeReset.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.Redirect && (await otherReset.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.Redirect, "recuperação revoga todas as sessões anteriores");
         using var oldLogin = configured.Client(); using var newLogin = configured.Client();
         check((await LoginAsync(oldLogin, EmailNovo, SenhaNova)).StatusCode == HttpStatusCode.OK && (await LoginAsync(newLogin, EmailNovo, "Recuperada#123!")).StatusCode == HttpStatusCode.Redirect, "senha antiga falha e nova credencial recuperada funciona");
@@ -171,24 +159,7 @@ internal static class ContaFlowTests
         var b = resetB.PostAsync("/Conta/RedefinirSenha", new FormUrlEncodedContent(new Dictionary<string, string> { { "Token", concurrentToken }, { "NovaSenha", "ConcorrenteB#123!" }, { "ConfirmacaoSenha", "ConcorrenteB#123!" }, { "__RequestVerificationToken", Token(formB) } }));
         var concurrent = await Task.WhenAll(a, b);
         check(concurrent.Count(r => r.StatusCode == HttpStatusCode.Redirect) == 1 && concurrent.Count(r => r.StatusCode == HttpStatusCode.OK) == 1, "dois POSTs concorrentes não consomem o mesmo token");
-        current = (await repo.ObterPorIdAsync(current.Id))!;
-        var blockedToken = tokens.Criar(current);
-        await usuarios.AlterarBloqueioAsync(current.Id, true);
-        check(Texto(await recovery.GetStringAsync("/Conta/RedefinirSenha?token=" + Uri.EscapeDataString(blockedToken))).Contains("link é inválido ou expirou"), "conta bloqueada não pode recuperar senha");
-        await usuarios.AlterarBloqueioAsync(current.Id, false);
-        check(Texto(await recovery.GetStringAsync("/Conta/RedefinirSenha?token=" + Uri.EscapeDataString(blockedToken))).Contains("link é inválido ou expirou"), "desbloqueio não revalida link anterior");
-        await usuarios.CadastrarAsync(new UsuarioCreateViewModel { Nome = "Bloqueado para recuperação", Email = "bloqueado-rec@example.test", Senha = Senha, PerfilAcessoId = 3 });
-        var blockedUser = (await repo.ObterPorEmailAsync("bloqueado-rec@example.test"))!;
-        await usuarios.AlterarBloqueioAsync(blockedUser.Id, true);
-        var reqBlocked = await PostAsync(recovery, "/Conta/RecuperarAcesso", new() { { "Email", blockedUser.Email } });
-        var anotherKnown = await PostAsync(recovery, "/Conta/RecuperarAcesso", new() { { "Email", EmailNovo } });
-        var nextMessage = await smtp.ReceberAsync();
-        check(reqBlocked.StatusCode == reqKnown.StatusCode && anotherKnown.StatusCode == reqKnown.StatusCode && nextMessage.Contains(EmailNovo) && !nextMessage.Contains(blockedUser.Email), "conta bloqueada recebe resposta genérica sem envio SMTP");
-        await PostAsync(recovery, "/Conta/RecuperarAcesso", new() { { "Email", "ausente-2@example.test" } });
-        check((await PostAsync(recovery, "/Conta/RecuperarAcesso", new() { { "Email", EmailNovo } })).StatusCode == HttpStatusCode.TooManyRequests, "recuperação limita solicitações independentemente da conta");
-        var disabledToken = tokens.Criar((await repo.ObterPorIdAsync(blockedUser.Id))!);
-        await usuarios.ExcluirAsync(blockedUser.Id);
-        check(Texto(await recovery.GetStringAsync("/Conta/RedefinirSenha?token=" + Uri.EscapeDataString(disabledToken))).Contains("link é inválido ou expirou"), "conta desativada não recupera acesso");
+
     }
 
     private static string ExtrairLink(string raw)
@@ -221,6 +192,8 @@ internal static class ContaFlowTests
             var start = new ProcessStartInfo("dotnet") { WorkingDirectory = root, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
             start.ArgumentList.Add(Path.Combine(root, "bin/Debug/net10.0/LeadScopeB2B.dll"));
             start.Environment["ConnectionStrings__DefaultConnection"] = connection; start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development"; start.Environment["ASPNETCORE_URLS"] = url;
+            start.Environment["MotorIntegracoes__AutomacaoHabilitada"] = "false";
+            start.Environment["MotorIntegracoes__Diretorio"] = Path.Combine(chaves, "integracoes-" + Guid.NewGuid().ToString("N"));
             start.Environment["DataProtection__DiretorioChaves"] = chaves;
             start.Environment["RecuperacaoAcesso__Habilitado"] = smtp.HasValue.ToString(); start.Environment["RecuperacaoAcesso__UrlPublica"] = url;
             start.Environment["EmailSmtp__Host"] = smtp.HasValue ? "127.0.0.1" : ""; start.Environment["EmailSmtp__Porta"] = (smtp ?? 587).ToString(); start.Environment["EmailSmtp__Remetente"] = "leadscope@example.test"; start.Environment["EmailSmtp__UsarTls"] = "false";

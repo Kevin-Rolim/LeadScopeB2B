@@ -1,0 +1,18 @@
+@model LeadScopeB2B.Integration.Universal.OperacaoApi
+<h2 class="h5 mt-4">Mapeamento de resposta</h2>
+<label class="form-label">Caminho dos itens (objeto ou array)<input class="form-control" name="Operacao.CaminhoItens" value="@Model.CaminhoItens"/></label>
+<p class="small">Use $.company.name ou $["razao_social"]. Somente seleção de propriedades/índices e transformações da lista. Vínculos e CNAEs podem ser normalizados em prévia; não geram relacionamentos ou registros SQL automaticamente.</p>
+<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Caminho JSON no item</th><th>Destino lógico</th><th>Tipo externo</th><th>Transformação</th><th>Obrigatório</th><th></th></tr></thead><tbody id="mapeamentos">
+@for(var i=0;i<Model.Mapeamentos.Count;i++){var m=Model.Mapeamentos[i];
+<tr><td><input type="hidden" name="Operacao.Mapeamentos.Index" value="@i"/><input class="form-control" list="caminhos-json" name="Operacao.Mapeamentos[@i].Caminho" value="@m.Caminho" required/></td>
+<td><select class="form-select" name="Operacao.Mapeamentos[@i].Destino">@foreach(var v in LeadScopeB2B.Integration.Universal.MapeadorApi.Destinos){<option value="@v" selected="@(m.Destino==v)">@v</option>}</select></td>
+<td><select class="form-select" name="Operacao.Mapeamentos[@i].Tipo">@foreach(var v in new[]{"string","number","integer","boolean"}){<option value="@v" selected="@(m.Tipo==v)">@v</option>}</select></td>
+<td><select class="form-select" name="Operacao.Mapeamentos[@i].Transformacao">@foreach(var v in LeadScopeB2B.Integration.Universal.MapeadorApi.Transformacoes){<option value="@v" selected="@(m.Transformacao==v)">@v</option>}</select></td>
+<td><input type="checkbox" name="Operacao.Mapeamentos[@i].Obrigatorio" value="true" checked="@m.Obrigatorio"/></td><td><button type="button" class="btn btn-sm btn-outline-danger" data-remover>Remover</button></td></tr>
+}
+</tbody></table></div><button type="button" class="btn btn-sm btn-outline-primary" data-adicionar="mapeamento">Adicionar campo</button>
+<template id="template-mapeamento"><tr><td><input type="hidden" name="Operacao.Mapeamentos.Index" value="__i__"/><input class="form-control" list="caminhos-json" name="Operacao.Mapeamentos[__i__].Caminho" value="$.name" required/></td>
+<td><select class="form-select" name="Operacao.Mapeamentos[__i__].Destino">@foreach(var v in LeadScopeB2B.Integration.Universal.MapeadorApi.Destinos){<option>@v</option>}</select></td>
+<td><select class="form-select" name="Operacao.Mapeamentos[__i__].Tipo"><option>string</option><option>number</option><option>integer</option><option>boolean</option></select></td>
+<td><select class="form-select" name="Operacao.Mapeamentos[__i__].Transformacao">@foreach(var v in LeadScopeB2B.Integration.Universal.MapeadorApi.Transformacoes){<option>@v</option>}</select></td>
+<td><input type="checkbox" name="Operacao.Mapeamentos[__i__].Obrigatorio" value="true"/></td><td><button type="button" class="btn btn-sm btn-outline-danger" data-remover>Remover</button></td></tr></template>

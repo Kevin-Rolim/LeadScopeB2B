@@ -1,53 +1,38 @@
 # API de integração
 
-A API é parte da mesma aplicação MVC. Não usa microserviços, EF ou provedores fictícios. Todas as chamadas exigem `X-Api-Key`. Em produção, use HTTPS.
+A API pertence à aplicação MVC e usa diretamente o esquema de [LeadScopeB2B.sql](Database/LeadScopeB2B.sql). Todas as chamadas exigem `X-Api-Key`; em produção exigem HTTPS.
 
 ## Credenciais
 
-1. Crie um usuário dedicado em **Usuários**, com perfil de leitura ou operação conforme a necessidade. A conta deve estar `ATIVO`.
-2. Cadastre a fonte real em **Fontes** e anote seu ID. Envio exige fonte ativa.
-3. Gere uma chave aleatória de pelo menos 32 bytes e calcule SHA-256 sobre o texto exato da chave, sem quebra de linha. Guarde a chave na aplicação cliente e apenas o hash no servidor. Por exemplo, execute localmente:
+Cadastre um usuário dedicado e uma fonte em `FonteDados`. Gere uma chave aleatória de pelo menos 32 bytes, guarde-a no cliente e configure somente seu SHA-256 hexadecimal no servidor:
 
-   ```python
-   import hashlib, secrets
-   chave = secrets.token_urlsafe(32)
-   print('Chave para o cliente:', chave)
-   print('SHA256 para o servidor:', hashlib.sha256(chave.encode()).hexdigest())
-   ```
+```bash
+dotnet user-secrets set 'Integracoes:Chaves:0:Sha256' '<sha256 da chave>'
+dotnet user-secrets set 'Integracoes:Chaves:0:UsuarioId' '<id do usuário>'
+dotnet user-secrets set 'Integracoes:Chaves:0:FonteDadosId' '<id da fonte>'
+dotnet user-secrets set 'Integracoes:Chaves:0:PermiteEnvio' 'true'
+```
 
-4. Configure User Secrets (desenvolvimento) ou as variáveis de ambiente equivalentes (`Integracoes__Chaves__0__Sha256` etc.):
-
-   ```bash
-   dotnet user-secrets set 'Integracoes:Chaves:0:Sha256' '<sha256 hexadecimal de 64 caracteres>'
-   dotnet user-secrets set 'Integracoes:Chaves:0:UsuarioId' '<id do usuário>'
-   dotnet user-secrets set 'Integracoes:Chaves:0:FonteDadosId' '<id da fonte>'
-   dotnet user-secrets set 'Integracoes:Chaves:0:PermiteEnvio' 'true'
-   ```
-
-   Para somente leitura, use `PermiteEnvio=false`. Envio também exige conjunto `Administracao` ou `Operacao Comercial`. Não existe chave habilitada por padrão. Índices 1, 2 etc. permitem outros clientes. Remover/trocar o hash revoga a chave; bloquear ou desativar o usuário também a revoga. Mudanças em variáveis de ambiente exigem reinício do processo.
-
-A comparação usa tempo constante. Cookie de login não autentica a API e chave de API não concede acesso aos formulários. O usuário de integração não pode escolher a identidade do autor ou a fonte no payload.
+Variáveis de ambiente equivalentes usam `Integracoes__Chaves__0__Sha256` etc. Índices adicionais configuram outros clientes. Não há chave padrão. Envio exige `PermiteEnvio=true`, perfil `Admin` ou `Gestor` e fonte com `DataHoraExclusao` nula. Leitura aceita também `Leitura`. Remover ou trocar o hash revoga a chave; mudanças nas variáveis exigem reiniciar o processo. A comparação usa tempo constante. Cookie não autentica a API e a chave não autentica formulários.
 
 ## Endpoints
 
 | Método | Caminho | Resultado |
 | --- | --- | --- |
-| GET | `/api/empresas?busca=&status=&cnae=` | Empresas ativas nos filtros; status `INATIVA` ainda é consultável, `REMOVIDA` é omitida |
-| GET | `/api/empresas/{id}` | Empresa e CNAEs associados |
+| GET | `/api/empresas?busca=&status=&cnae=` | Empresas não removidas |
+| GET | `/api/empresas/{id}` | Empresa e CNAEs |
 | GET | `/api/pessoas?busca=&status=` | Pessoas não removidas |
-| GET | `/api/pessoas/{id}` | Pessoa não removida |
-| GET | `/api/leads?busca=&status=&pessoaId=&empresaId=&cnae=` | Vínculos não removidos com pessoa/empresa não removida |
+| GET | `/api/pessoas/{id}` | Pessoa |
+| GET | `/api/leads?busca=&status=&pessoaId=&empresaId=&cnae=` | Vínculos não removidos |
 | GET | `/api/leads/{pessoaId}/{empresaId}` | Detalhes do vínculo |
-| GET | `/api/cnaes?busca=` | Até 200 códigos/descrições |
-| POST | `/api/integracoes/dados` | Evidência pendente: `202 Accepted` e `Location` |
-| GET | `/api/integracoes/dados/{id}` | Estado da evidência; somente a mesma fonte pode consultar |
-| POST | `/api/integracoes/leads` | Novo vínculo incerto: `201 Created` e `Location` |
+| GET | `/api/cnaes?busca=` | Até 200 códigos |
+| POST | `/api/integracoes/dados` | Dado coletado: `201 Created` e `Location` |
+| GET | `/api/integracoes/dados/{id}` | Dado coletado da mesma fonte |
+| POST | `/api/integracoes/leads` | Vínculo: `201 Created` e `Location` |
 
-Os filtros de CNAE aceitam sete dígitos ou formatação usual. JSON usa camelCase. Retornos não contêm senhas/hashes de senha. As consultas refletem o catálogo autorizado, inclusive estados ainda pendentes; o consumidor deve observar os estados retornados.
+JSON usa camelCase. As consultas incluem cadastros pendentes; observe os estados retornados.
 
-A recepção atual trabalha com pessoas e empresas já cadastradas: a restrição existente em `Dados_coletados` exige exatamente um destino. Cadastro/edição de pessoas e empresas é feito na interface por usuários autorizados. Não há endpoint externo que aprove evidências, qualifique leads, troque permissões ou apague cadastros.
-
-### Enviar evidência
+## Dados coletados
 
 ```http
 POST /api/integracoes/dados
@@ -56,37 +41,26 @@ Content-Type: application/json
 
 {
   "pessoaId": 42,
-  "campo": "email",
+  "campo": "Email",
   "valor": "contato@empresa.com",
-  "nivelConfianca": 92.5,
-  "evidenciaUrl": "https://empresa.com/equipe"
+  "nivelConfianca": 92.5
 }
 ```
 
-Ou use `empresaId`, sem `pessoaId`. Identificadores precisam existir, a pessoa não pode estar bloqueada/removida e a empresa não pode estar inativa/removida. `nivelConfianca` é opcional e vai de 0 a 100. URL de evidência é opcional e deve usar HTTP(S). O servidor não acessa a URL recebida.
+Use `pessoaId` ou `empresaId`, nunca ambos. O destino deve existir e estar disponível. O autor e `FonteDadosId` vêm da credencial. O valor é validado e normalizado antes de ser gravado em `Valor`.
 
-Campos permitidos:
+`Campo` deve corresponder exatamente ao nome do campo do banco:
 
 | Destino | Campos |
 | --- | --- |
-| Pessoa | `nome`, `email`, `telefone`, `linkedin`, `origem` |
-| Empresa | `razao_social`, `nome_fantasia`, `cnpj`, `site`, `segmento`, `porte`, `cidade`, `estado`, `email`, `telefone` |
+| Pessoas | `Nome`, `Email`, `Telefone`, `UrlLinkedIn`, `Origem` |
+| Empresas | `RazaoSocial`, `NomeFantasia`, `Cnpj`, `UrlSite`, `Segmento`, `Porte`, `Cidade`, `Estado`, `Email`, `Telefone` |
 
-Valores são validados por campo (tamanho, e-mail, HTTP(S), CNPJ com DV, UF) e normalizados. Campo vazio/desconhecido é recusado. Estados e permissões não são campos de enriquecimento.
+`DadosColetados` possui somente `Id`, `Campo`, `Valor`, `NivelConfianca`, `FonteDadosId`, `PessoaId` e `EmpresaId`. Envios idênticos da mesma fonte, campo e destino reutilizam o registro existente. Não há colunas de estado de revisão, URL de evidência, data de coleta ou valor normalizado separado nessa tabela. O recebimento não altera o cadastro de destino. Em **Dados coletados**, os campos empresariais RazaoSocial, NomeFantasia, Porte, Cidade e Estado permitem comparação, aprovação ou rejeição humana; a decisão fica em Logs. Os demais campos permanecem disponíveis para consulta e edição pelos formulários próprios.
 
-Um reenvio com mesma fonte/destino/campo/valor normalizado reutiliza o ID enquanto a evidência estiver pendente. Depois de revisada, um novo envio constitui nova evidência e exige nova decisão. A resposta `202` indica armazenamento para revisão, não confirmação do valor no cadastro.
+## Vínculos
 
-Em **Revisar dados**, um operador aplica ou rejeita a evidência. Aplicação e mudança de estado ficam na mesma transação com o log. Duplicidade de pessoa/CNPJ e disponibilidade do destino são verificadas novamente; falha reverte toda a operação. `VALIDADO` ou `REJEITADO` são os estados finais da evidência. A aprovação de um campo não valida automaticamente o cadastro completo.
-
-`Revisoes` continua reservado ao vínculo pessoa–empresa, conforme a FK existente. As decisões sobre evidências são registradas em `Logs`, sem alterar relacionamentos.
-
-### Enviar vínculo
-
-```http
-POST /api/integracoes/leads
-X-Api-Key: <chave>
-Content-Type: application/json
-
+```json
 {
   "pessoaId": 42,
   "empresaId": 7,
@@ -97,18 +71,16 @@ Content-Type: application/json
 }
 ```
 
-O servidor atribui `statusLead=NOVO`, `statusVinculo=INCERTO` e a fonte da credencial. Pessoa e empresa precisam estar disponíveis. Um par já cadastrado resulta em `409`; a chave composta também impede corrida entre chamadas. Revisão e confirmação do vínculo ocorrem na interface antes de sua exportação.
+Envie a `/api/integracoes/leads`. O vínculo nasce com `StatusLead=NOVO`, `StatusVinculo=INCERTO` e a fonte da credencial. O par existente retorna `409`. A revisão ocorre na interface e é registrada em `Revisoes`, vinculada a `PessoasEmpresas`.
 
-## Respostas e limites
+## Limites e erros
 
-- `200`: consulta concluída.
-- `201` / `202`: vínculo criado / evidência aguardando revisão.
-- `400`: JSON/dados inválidos; erros de validação incluem `errors`.
-- `401` / `403`: credencial ausente/inválida ou operação sem permissão.
-- `404`: registro ausente, removido ou evidência de outra fonte.
-- `409`: duplicidade, fonte inativa, destino indisponível ou conflito de revisão.
-- `415`: conteúdo enviado sem `application/json`.
-- `429`: limite de 120 requisições por minuto/IP excedido.
-- `503`: falha de acesso ao banco; detalhes ficam no log interno.
+Até 120 chamadas/minuto/IP; envios de até 32 KiB. Respostas: `400` para dados inválidos, `401` para chave ausente/inválida, `403` para falta de permissão, `404` para ausência/remoção ou dado de outra fonte, `409` para duplicidade ou restrição do banco, `415` para conteúdo sem JSON, `429` para limite e `503` para indisponibilidade do banco. Erros usam Problem Details e não expõem SQL nem credenciais.
 
-Os erros usam JSON Problem Details, sem SQL, stack trace ou dados de autenticação. Envios têm limite de 32 KiB. Não há CORS liberado para qualquer origem. O catálogo usa filtros simples; não há coleta agendada ou chamadas a terceiros nesta versão.
+A API externa não oferece endpoints de aprovação de evidências ou qualificação de leads. A revisão de evidências empresariais ocorre somente na interface MVC autenticada. A consulta agendada à CNPJAPI é um fluxo de saída separado das credenciais X-Api-Key de entrada, dentro dos mesmos services e repositories existentes.
+
+## Motor de saída — Integrações e APIs
+
+A interface administrativa configura APIs REST/JSON por catálogo, OpenAPI 3.0/3.1 JSON/YAML, formulário manual ou contrato privado versionado. Um executor, uma autenticação compartilhada, um controle de consumo e um BackgroundService atendem todos os provedores. A CNPJAPI é somente um contrato do catálogo.
+
+Consulte [configuração, protocolos, limites, custos e automação](MotorIntegracoes.md) e o [contrato para empresas provedoras](ContratoIntegracaoLeadScopeB2B.md). A automação começa desabilitada. A configuração antiga ColetaAutomatica/CNPJAPI precisa ser migrada explicitamente pela interface; não há execução paralela do cliente antigo.

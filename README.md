@@ -1,81 +1,74 @@
 # LeadScopeB2B
 
-Aplicação ASP.NET Core MVC (.NET 10), SQL Server e ADO.NET com `Microsoft.Data.SqlClient`. A arquitetura continua Controller → Service → Repository → banco, com injeção de dependências, SQL parametrizado e operações assíncronas. Não há Entity Framework Core ou migrações automáticas.
+Aplicação ASP.NET Core MVC (.NET 10), SQL Server e ADO.NET com `Microsoft.Data.SqlClient`. Fluxo Controller → Service → Repository → banco, com SQL parametrizado e operações assíncronas.
+
+## Banco de dados
+
+O contrato da aplicação é [Docs/Database/LeadScopeB2B.sql](Docs/Database/LeadScopeB2B.sql), com 14 tabelas: `ConjuntoPermissoes`, `FonteDados`, `PerfisAcesso`, `Usuarios`, `Logs`, `Cnaes`, `Pessoas`, `Empresas`, `DadosColetados`, `CnaesEmpresas`, `PessoasEmpresas`, `Revisoes`, `Exportacoes` e `ExportacoesPessoasEmpresas`.
+
+A aplicação usa diretamente os nomes e campos desse banco. Não executa DDL, não renomeia estruturas e não modifica o esquema na inicialização. Os dados de referência de permissões estão em [InsertCPPA.sql](Docs/Database/InsertCPPA.sql). O banco existente deve estar provisionado pelo operador.
 
 ## Executar
 
-1. Instale o SDK .NET 10 e disponibilize um SQL Server com o esquema atual.
-2. Configure a conexão com User Secrets em desenvolvimento ou com `ConnectionStrings__DefaultConnection` no ambiente de execução:
+Configure a conexão em User Secrets ou em `ConnectionStrings__DefaultConnection` no ambiente:
 
-   ```bash
-   dotnet user-secrets set 'ConnectionStrings:DefaultConnection' 'Server=localhost,14330;Database=LeadScopeB2B;User Id=<usuario>;Password=<senha>;TrustServerCertificate=True'
-   dotnet restore
-   dotnet build
-   ```
+```bash
+dotnet user-secrets set 'ConnectionStrings:DefaultConnection' 'Server=localhost,14331;Database=LeadScopeB2B;User Id=<usuario>;Password=<senha>;TrustServerCertificate=True'
+dotnet restore
+dotnet build
+dotnet run
+```
 
-   A conexão local existente foi preservada em User Secrets durante esta implementação. `TrustServerCertificate=True` é apenas para o ambiente local. Em produção, configure TLS/certificado válido e HTTPS para a aplicação; as chaves de API exigem HTTPS fora de Development.
+A porta deve corresponder ao SQL Server utilizado. O Compose do projeto expõe a porta local 14331. Em produção, use HTTPS e certificado válido no SQL Server.
 
-3. Em instalações anteriores, aplique [001_UsuariosVersaoSessao.sql](Docs/Database/Migrations/001_UsuariosVersaoSessao.sql) no banco existente. Essa migração adiciona somente a versão de sessão e preserva os dados. No banco local configurado ela já foi aplicada. O snapshot de instalações novas já contém a coluna.
+Para criar o primeiro administrador com o perfil associado ao conjunto `Admin`:
 
-4. Se ainda não houver administrador cadastrado, crie o primeiro pelo comando local:
+```bash
+export LEADSCOPE_ADMIN_NOME='Seu nome'
+export LEADSCOPE_ADMIN_EMAIL='voce@empresa.com'
+read -rsp 'Senha inicial: ' LEADSCOPE_ADMIN_SENHA
+export LEADSCOPE_ADMIN_SENHA
+dotnet run -- --criar-admin
+unset LEADSCOPE_ADMIN_SENHA
+```
 
-   ```bash
-   export LEADSCOPE_ADMIN_NOME='Seu nome'
-   export LEADSCOPE_ADMIN_EMAIL='voce@empresa.com'
-   read -rsp 'Senha inicial: ' LEADSCOPE_ADMIN_SENHA
-   export LEADSCOPE_ADMIN_SENHA
-   dotnet run -- --criar-admin
-   unset LEADSCOPE_ADMIN_SENHA
-   ```
+Não há senha padrão. O cadastro público em `/Conta/Cadastro` concede somente Leitura.
 
-   A senha deve ter de 6 a 100 caracteres; use uma senha forte. O comando exige um perfil no conjunto `Administracao` (ou o alias histórico `Admin`) e funciona enquanto não houver administrador cadastrado, mesmo que existam usuários comuns. Não há senha padrão nem cadastro público de administradores. Os hashes fictícios do seed antigo não autenticam.
+## Funcionalidades
 
-5. Rode `dotnet run`, abra a URL indicada no terminal e use `/Conta/Cadastro` para criar uma conta de leitura ou `/Conta/Login` para entrar.
+- Contas: cadastro, login/logout, edição do próprio nome/e-mail, troca de senha e recuperação por SMTP configurável. Administradores gerenciam o perfil de acesso. `Usuarios` contém somente `Id`, `Nome`, `Email`, `SenhaHash` e `PerfilAcessoId`; não há bloqueio ou desativação de contas. [Contas](Docs/Contas.md).
+- Empresas: cadastro, edição, consulta, filtros e remoção pelo campo `Status`. CNPJ normalizado e validado. A restrição UNIQUE original admite somente um registro com CNPJ nulo.
+- Pessoas: cadastro, edição, consulta, bloqueio por `DataBloqueio` e remoção por `DataExclusao`. Duplicidade verificada por e-mail ou `UrlLinkedIn`.
+- Leads: registros de `PessoasEmpresas`, com revisão humana e histórico em `Revisoes`. Edição reabre a análise; remoção usa `StatusLead` e `StatusVinculo`.
+- CNAEs: consulta, cadastro e associação pela chave `CnaeNumero + EmpresaId`, sem distinção de principal.
+- Fontes: cadastro e disponibilidade determinada por `DataHoraExclusao`, atualizando `DataHoraModificacao`.
+- Dados coletados: armazenamento e consulta de `Campo`, `Valor`, `NivelConfianca`, `FonteDadosId` e exatamente um destino. O recebimento não sobrescreve cadastros; os cinco campos empresariais importados permitem atualização somente por aprovação humana na interface, auditada em Logs. O esquema não possui estado de aprovação, URL de evidência, valor normalizado separado ou data de coleta nessa tabela. [Integrações](Docs/Integracoes.md).
+- Exportação CSV: até 200 leads qualificados com vínculo ativo, pessoa validada/desbloqueada e empresa validada. Registra `QtdItens`, o usuário e os pares exportados na mesma transação, com proteção contra fórmulas.
+- Auditoria: eventos em `Logs`, com `TipoEvento`, `DescricaoEvento`, `DataHora`, `DadosAlterados` e `UsuarioId`. Não registra credenciais.
 
-O banco conectado foi inspecionado e preservado. Para uma **instalação nova em banco vazio**, um operador pode executar [EsquemaAtual.sql](Docs/Database/EsquemaAtual.sql). Esse snapshot contém tabelas, índices, restrições, perfis e conjuntos básicos, sem usuários, credenciais ou dados comerciais. Não o execute na base existente. Os demais scripts SQL e o PDF são históricos e incompatíveis em vários nomes/colunas; veja [o diagnóstico](Docs/Development/EstadoInicial.md).
-
-## Funcionalidades e regras
-
-- Contas: cadastro público com confirmação de senha, login/logout, perfil pessoal e alteração de senha. Cadastro público sempre recebe Leitura; somente administradores mudam permissões e bloqueios. [Fluxos, migração e SMTP](Docs/Contas.md).
-- Recuperação: formulário e redefinição por link temporário de uso único, integrados ao SMTP configurável. Sem configuração, a tela informa indisponibilidade e não simula envio. Os demais fluxos de conta funcionam sem serviço de e-mail.
-- Empresas: cadastro, consulta, edição, busca por nome/CNPJ/segmento/cidade, filtro por status e CNAE e remoção lógica. CNPJ opcional, normalizado sem pontuação, numérico ou alfanumérico com dígitos verificadores. `cnpj_raiz` acompanha a alteração. O índice filtrado do banco permite vários CNPJs nulos.
-- Pessoas: cadastro, consulta, edição, busca, validação, bloqueio/desbloqueio e remoção lógica. E-mail e perfil profissional identificam duplicidade, inclusive em registros removidos. Nome ou telefone isolados não são usados para unir pessoas automaticamente.
-- Leads: vínculo `pessoa_id + empresa_id`, com cargo, departamento, senioridade, fonte, confiança e estados independentes de vínculo e lead. Há pesquisa, filtros por pessoa/empresa/CNAE, edição, revisão com histórico e remoção lógica.
-- CNAEs: consulta por código/descrição e cadastro pelo administrador; associação/desassociação na empresa. Código normalizado para sete dígitos e no máximo um principal por empresa, preservando o índice existente.
-- Fontes: cadastro e ativação/desativação pelo administrador. Cada integração usa uma fonte efetivamente cadastrada; nenhuma integração de terceiros foi simulada.
-- Dados externos: evidências pendentes em `Dados_coletados`, normalização, deduplicação, fila de revisão e aplicação/rejeição humana. A evidência permanece armazenada e o cadastro só muda quando aprovada. Revisões concorrentes e aplicação duplicada são impedidas por transação. Veja [a API](Docs/Integracoes.md).
-- Exportação: selecione até 200 leads na lista para gerar CSV. Exige lead `QUALIFICADO`, vínculo `ATIVO`, pessoa `VALIDADO` e desbloqueada, e empresa `VALIDADA`. Grava `Exportacoes`, pares exportados e log na mesma transação, e neutraliza células interpretáveis como fórmulas.
-- Auditoria: últimos 200 eventos de login, cadastro público, alterações de perfil/senha, aceitação SMTP da recuperação, recebimento/revisão de evidências, revisão de leads e exportações. Não registra senhas, hashes de senha ou chaves.
-
-Estados de pessoas: `PENDENTE`, `VALIDADO`, `BLOQUEADO`, `REMOVIDO`. O bloqueio é controlado por `data_bloqueio`; edição comum não o remove. Desbloquear volta para `PENDENTE`, exigindo validação. Empresas: `PENDENTE`, `VALIDADA`, `INATIVA`, `REMOVIDA`. Os formulários de edição fazem a validação humana dos cadastros.
-
-Vínculos: `INCERTO`, `ATIVO`, `INATIVO`. Leads começam em `NOVO` ou `EM_ANALISE`; `QUALIFICADO`/`REJEITADO` só são atribuídos pela revisão. Editar reabre a análise e limpa a data da revisão atual, preservando o histórico. A remoção usa `REMOVIDO` e inativa o vínculo, pois não existe coluna de exclusão e há histórico referenciando sua chave. Identificadores de registros removidos continuam reservados; não há restauração automática.
-
-Datas são gravadas e exibidas em UTC. Listas de CNAEs, evidências e auditoria mostram até 200 resultados; as demais listas retornam os registros que satisfazem os filtros.
-
-## Acesso
-
-| Conjunto real do banco | Papel | Permissões |
+| ConjuntoPermissoes.Nome | Papel | Acesso |
 | --- | --- | --- |
-| `Administracao` | ADMIN | Cadastros, revisões, exportações, fontes, CNAEs, usuários e auditoria |
-| `Operacao Comercial` | OPERACAO | Consultas, cadastros de pessoas/empresas/leads, associação de CNAEs, revisões e exportações |
-| `Leitura` | LEITURA | Consultas de empresas, pessoas, leads e CNAEs |
+| Admin | ADMIN | Administração, cadastros, revisão de leads, exportação e auditoria |
+| Gestor | OPERACAO | Consultas, cadastros comerciais, revisão de leads e exportação |
+| Leitura | LEITURA | Consulta de empresas, pessoas, leads e CNAEs |
 
-Os aliases históricos `Admin` e `Gestor` são aceitos explicitamente. Conjuntos desconhecidos não concedem acesso. Usuários têm `ATIVO`, `BLOQUEADO` ou `DESATIVADO`; exclusão de usuário desativa a conta e preserva histórico. O último administrador ativo não pode ser desativado ou perder seu perfil.
-
-A interface usa cookie HttpOnly, proteção antifalsificação nos POSTs e sessões de oito horas. Perfil, estado e versão de sessão são relidos a cada requisição; alterações na conta revogam cookies e links antigos, inclusive após bloqueio seguido de desbloqueio. A API aceita somente a chave própria, separada do cookie. Há limites por IP de login, cadastro, perfil e recuperação, descritos em [Contas](Docs/Contas.md), e de 120 chamadas de API/minuto. Não há CORS aberto.
+A interface usa cookie HttpOnly, antifalsificação nos POSTs e sessões de oito horas. A sessão é conferida com os dados atuais da conta. A API usa exclusivamente `X-Api-Key`, exige HTTPS fora de Development e limita chamadas por IP a 120/minuto. Não há CORS aberto.
 
 ## Testes
 
 ```bash
+dotnet run --project Tests/LeadScopeB2B.SmokeTests.csproj -- --contrato
 dotnet run --project Tests/LeadScopeB2B.SmokeTests.csproj
-dotnet list package --include-transitive --vulnerable
 ```
 
-O executável de testes usa SQL Server real, inclui envio por SMTP local de captura e cria um banco de nome aleatório começando por `LeadScopeB2B_Tests_`, aplica o snapshot, testa services/repositories e inicia a aplicação para testar HTTP/Razor/JSON. Ao terminar, mata somente o processo iniciado por ele e exclui somente seu banco temporário. Precisa de permissão para criar/excluir esse banco; não insere registros nas tabelas da conexão de origem. Para usar outro servidor, configure `LEADSCOPE_TEST_CONNECTION`. A execução também depende da configuração Debug do projeto web, construída automaticamente pelo comando acima. O [relatório de validação](Docs/Development/Validacao.md) registra os resultados e limites da verificação.
+A opção `--contrato` confere nomes, tipos, nulabilidade e tamanhos dos models sem acessar o banco. A suíte completa cria um banco temporário `LeadScopeB2B_Tests_<id>`, usando as definições das 14 tabelas do esquema definitivo e os dados de referência. Exercitam SQL Server, services, HTTP, Razor, autenticação, API e SMTP local. Ao final, excluem apenas o próprio banco temporário. Configure `LEADSCOPE_TEST_CONNECTION` para apontar ao servidor autorizado a criar bancos de teste; as tabelas da base de origem não são utilizadas.
 
-A correção explícita da dependência `System.Security.Cryptography.Pkcs` evita as vulnerabilidades transitivas da versão trazida por SqlClient 7.1.1. Referências técnicas: [SqlClient](https://github.com/dotnet/SqlClient/issues/4843), [cookies e APIs no ASP.NET Core 10](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/api-endpoint-auth?view=aspnetcore-10.0), [cálculo oficial do CNPJ alfanumérico](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/documentos-tecnicos/cnpj/manual-dv-cnpj.pdf).
+O motor genérico de integrações está implementado. Conectores REST/JSON são configurados por contratos e pela interface; veja o guia abaixo.
 
-## Configuração restante
+## Integrações e APIs
 
-Na base de desenvolvimento é possível cadastrar usuários comuns pela interface. Para administração, crie o primeiro administrador com uma senha escolhida pelo operador. Também faltam dados/fontes reais e chaves das aplicações autorizadas. A recuperação de senha por e-mail exige origem pública e SMTP reais; cadastro, login, perfil e senha autenticada funcionam sem essa configuração. A migração de versão de sessão já foi aplicada à base local. Adaptadores para serviços específicos, agendamento de coletas e importação de catálogos completos dependem de fontes e contratos ainda não definidos e não foram inventados.
+Motor REST/JSON por catálogo, OpenAPI 3.0/3.1 (JSON/YAML), assistente manual ou contrato privado LeadScopeB2B 1.0. Administradores configuram autenticação, mapeamento, custos, limites e rotinas na interface. A CNPJAPI é um contrato do catálogo; não há executor exclusivo de fornecedor.
+
+[Conexão simplificada e descoberta de limites](Docs/SimplificacaoIntegracoes.md) · [Guia de configuração e operação](Docs/MotorIntegracoes.md) · [Contrato privado e exemplos](Docs/ContratoIntegracaoLeadScopeB2B.md) · [Entrega e validação](Docs/EntregaMotorIntegracoes.md).
+
+O banco de 14 tabelas permanece intacto; configurações e segredos cifrados ficam em armazenamento auxiliar persistente. Automação e escrita externa permanecem desabilitadas por padrão.

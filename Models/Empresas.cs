@@ -41,7 +41,7 @@ public class Empresas
     [StringLength(50)]
     public string? Status { get; set; }
 
-    public DateTime DataCriacao { get; set; }
+    public DateTime? DataCriacao { get; set; }
 
-    public DateTime DataAtualizacao { get; set; }
+    public DateTime? DataAtualizacao { get; set; }
 }

@@ -9,7 +9,7 @@ public class Exportacoes
     [Range(0, int.MaxValue)]
     public int? QtdItens { get; set; }
 
-    public DateTime DataHora { get; set; }
+    public DateTime? DataHora { get; set; }
 
     [Required]
     public int UsuarioId { get; set; }
