@@ -1,3 +1,5 @@
+using LeadScopeB2B.Security;
+using Microsoft.AspNetCore.Authorization;
 using LeadScopeB2B.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,9 +14,9 @@ public class LeadsController : Controller
         _service = service;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? busca, string? status, int? pessoaId, int? empresaId, string? cnae)
     {
-        return View(await _service.ListarAsync());
+        return View(await _service.ListarAsync(busca, status, pessoaId, empresaId, cnae));
     }
 
     public async Task<IActionResult> Details(int pessoaId, int empresaId)
@@ -23,6 +25,7 @@ public class LeadsController : Controller
         return lead is null ? NotFound() : View(lead);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -31,6 +34,7 @@ public class LeadsController : Controller
         return View(model);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(LeadFormViewModel model)
@@ -55,6 +59,7 @@ public class LeadsController : Controller
         }
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
     public async Task<IActionResult> Edit(int pessoaId, int empresaId)
     {
@@ -62,6 +67,7 @@ public class LeadsController : Controller
         return lead is null ? NotFound() : View(lead);
     }
 
+    [Authorize(Policy = Acesso.Edicao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int pessoaId, int empresaId, LeadFormViewModel model)
@@ -87,5 +93,24 @@ public class LeadsController : Controller
         {
             return NotFound();
         }
+    }
+    [HttpPost, Authorize(Policy = Acesso.Edicao)]
+    public async Task<IActionResult> Excluir(int pessoaId, int empresaId)
+    {
+        await _service.ExcluirAsync(pessoaId, empresaId);
+        TempData["Sucesso"] = "Registro removido da lista de ativos.";
+        return RedirectToAction(nameof(Index));
+    }
+    [HttpPost, Authorize(Policy = Acesso.Edicao)]
+    public async Task<IActionResult> Revisar(int pessoaId, int empresaId, string decisao, string? comentario)
+    {
+        await _service.RevisarAsync(pessoaId, empresaId, User.UsuarioId(), decisao, comentario);
+        return RedirectToAction(nameof(Details), new { pessoaId, empresaId });
+    }
+    [HttpPost, Authorize(Policy = Acesso.Edicao)]
+    public async Task<IActionResult> Exportar(string[] selecionados, [FromServices] ExportacaoService exportacao)
+    {
+        var csv = await exportacao.ExportarAsync(selecionados, User.UsuarioId());
+        return File(csv, "text/csv; charset=utf-8", "leads.csv");
     }
 }

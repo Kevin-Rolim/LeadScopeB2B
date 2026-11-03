@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class Usuarios
 {
-    [Key]
     public int Id { get; set; }
 
     [Required]
@@ -18,7 +17,8 @@ public class Usuarios
 
     [Required]
     [StringLength(255)]
-    public string Senha { get; set; } = string.Empty;
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string SenhaHash { get; set; } = string.Empty;
 
     [Required]
     public int PerfilAcessoId { get; set; }

@@ -1,0 +1,16 @@
+@model PerfilViewModel
+@{ ViewData["Title"] = "Meu perfil"; }
+<div class="mx-auto" style="max-width: 640px">
+<h1 class="h3">Meu perfil</h1>
+<p>Perfil de acesso: <strong>@Model.PerfilAcesso</strong></p>
+<form asp-action="Perfil" method="post" class="card card-body gap-2">
+    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+    <label asp-for="Nome" class="form-label"></label><input asp-for="Nome" class="form-control" autocomplete="name" /><span asp-validation-for="Nome" class="text-danger"></span>
+    <label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" autocomplete="email" /><span asp-validation-for="Email" class="text-danger"></span>
+    <label asp-for="SenhaAtual" class="form-label"></label><input asp-for="SenhaAtual" class="form-control" autocomplete="current-password" /><span asp-validation-for="SenhaAtual" class="text-danger"></span>
+    <p class="small text-muted mb-0">Confirme sua senha para salvar. Suas outras sessões serão encerradas.</p>
+    <button class="btn btn-primary mt-2" type="submit">Salvar meus dados</button>
+</form>
+<a asp-action="AlterarSenha" class="btn btn-outline-primary mt-3">Alterar senha</a>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

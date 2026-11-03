@@ -34,6 +34,7 @@ public class EmpresaFormViewModel
     public string? Cidade { get; set; }
 
     [StringLength(2, MinimumLength = 2, ErrorMessage = "Use a sigla do estado com 2 letras.")]
+    [RegularExpression("^[A-Za-z]{2}$", ErrorMessage = "Use a sigla do estado.")]
     public string? Estado { get; set; }
 
     [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
@@ -46,5 +47,6 @@ public class EmpresaFormViewModel
 
     [Required(ErrorMessage = "Informe o status.")]
     [StringLength(50)]
+    [RegularExpression("^(PENDENTE|VALIDADA|INATIVA)$")]
     public string Status { get; set; } = "PENDENTE";
 }

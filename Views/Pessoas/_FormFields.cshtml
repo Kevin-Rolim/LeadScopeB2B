@@ -17,13 +17,13 @@
         <span asp-validation-for="Telefone" class="text-danger"></span>
     </div>
     <div class="col-md-6">
-        <label asp-for="UrlLinkedin" class="form-label"></label>
-        <input asp-for="UrlLinkedin" class="form-control" />
-        <span asp-validation-for="UrlLinkedin" class="text-danger"></span>
+        <label asp-for="UrlLinkedIn" class="form-label"></label>
+        <input asp-for="UrlLinkedIn" class="form-control" />
+        <span asp-validation-for="UrlLinkedIn" class="text-danger"></span>
     </div>
     <div class="col-md-6">
         <label asp-for="Status" class="form-label"></label>
-        <input asp-for="Status" class="form-control" />
+        <select asp-for="Status" class="form-select"><option>PENDENTE</option><option>VALIDADO</option></select>
         <span asp-validation-for="Status" class="text-danger"></span>
     </div>
     <div class="col-md-6">

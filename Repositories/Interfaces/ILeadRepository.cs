@@ -2,12 +2,15 @@ namespace LeadScopeB2B.Repositories.Interfaces;
 
 public interface ILeadRepository
 {
-    Task<List<PessoasEmpresas>> ListarAsync();
+    Task<List<PessoasEmpresas>> ListarAsync(string? busca = null, string? status = null, int? pessoaId = null, int? empresaId = null, string? cnae = null);
     Task<PessoasEmpresas?> ObterAsync(int pessoaId, int empresaId);
     Task<bool> PessoaExisteAsync(int pessoaId);
     Task<bool> EmpresaExisteAsync(int empresaId);
     Task<List<Pessoas>> ListarPessoasAsync();
     Task<List<Empresas>> ListarEmpresasAsync();
     Task AdicionarAsync(PessoasEmpresas lead);
-    Task SalvarAlteracoesAsync();
+    Task AtualizarAsync(PessoasEmpresas lead);
+    Task ExcluirAsync(int pessoaId, int empresaId);
+    Task RevisarAsync(int pessoaId, int empresaId, int usuarioId, string decisao, string? comentario);
+    Task<List<Revisoes>> ListarRevisoesAsync(int pessoaId, int empresaId);
 }

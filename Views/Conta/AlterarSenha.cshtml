@@ -1,0 +1,15 @@
+@model AlterarSenhaViewModel
+@{ ViewData["Title"] = "Alterar senha"; }
+<div class="mx-auto" style="max-width: 520px">
+<h1 class="h3">Alterar senha</h1>
+<p class="text-muted">Após a alteração, entre novamente com a nova senha. Todas as sessões anteriores serão encerradas.</p>
+<form asp-action="AlterarSenha" method="post" class="card card-body gap-2">
+    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+    <label asp-for="SenhaAtual" class="form-label"></label><input asp-for="SenhaAtual" class="form-control" autocomplete="current-password" /><span asp-validation-for="SenhaAtual" class="text-danger"></span>
+    <label asp-for="NovaSenha" class="form-label"></label><input asp-for="NovaSenha" class="form-control" autocomplete="new-password" /><span asp-validation-for="NovaSenha" class="text-danger"></span>
+    <label asp-for="ConfirmacaoSenha" class="form-label"></label><input asp-for="ConfirmacaoSenha" class="form-control" autocomplete="new-password" /><span asp-validation-for="ConfirmacaoSenha" class="text-danger"></span>
+    <button class="btn btn-primary mt-2" type="submit">Alterar senha</button>
+</form>
+<a asp-action="Perfil" class="btn btn-outline-secondary mt-3">Voltar ao perfil</a>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

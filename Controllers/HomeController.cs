@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LeadScopeB2B.Controllers;
 
+[Microsoft.AspNetCore.Authorization.AllowAnonymous]
 public class HomeController : Controller
 {
     public IActionResult Index()

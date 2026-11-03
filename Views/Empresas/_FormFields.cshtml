@@ -33,7 +33,7 @@
     </div>
     <div class="col-md-4">
         <label asp-for="Status" class="form-label"></label>
-        <input asp-for="Status" class="form-control" />
+        <select asp-for="Status" class="form-select"><option>PENDENTE</option><option>VALIDADA</option><option>INATIVA</option></select>
         <span asp-validation-for="Status" class="text-danger"></span>
     </div>
     <div class="col-md-8">

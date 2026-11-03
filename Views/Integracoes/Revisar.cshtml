@@ -1,0 +1,19 @@
+@model LeadScopeB2B.Integration.RevisaoColeta
+@{ ViewData["Title"] = "Revisar evidência"; }
+<h1 class="h3">Revisar evidência @Model.Dado.Id</h1>
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<p>@(Model.Dado.EmpresaId.HasValue ? $"Empresa {Model.Dado.EmpresaId}" : $"Pessoa {Model.Dado.PessoaId}") · @(Model.Dado.FonteDados?.Nome ?? $"Fonte {Model.Dado.FonteDadosId}") · Campo @Model.Dado.Campo</p>
+<p>Confira a origem e a adequação do dado. Aprovar altera somente este campo do cadastro e registra a decisão na auditoria.</p>
+<table class="table"><thead><tr><th>Valor atual</th><th>Valor externo</th></tr></thead><tbody><tr><td>@(Model.ValorAtual ?? "Não informado")</td><td>@Model.Dado.Valor</td></tr></tbody></table>
+@if(Model.Revisada) {
+<p>Esta evidência já foi revisada. Consulte a auditoria para conhecer a decisão.</p>
+} else {
+<form asp-action="Revisar" method="post">
+<input type="hidden" name="id" value="@Model.Dado.Id" />
+<input type="hidden" name="valorEsperado" value="@Model.ValorAtual" />
+<button class="btn btn-success" name="aprovar" value="true">Aprovar e atualizar campo</button>
+<button class="btn btn-outline-danger" name="aprovar" value="false">Rejeitar</button>
+</form>
+}
+@if(Model.Dado.EmpresaId is int empresaId){<a asp-controller="Empresas" asp-action="Details" asp-route-id="@empresaId" class="btn btn-outline-secondary">Voltar à empresa</a>}
+<a asp-action="Index">Voltar aos dados coletados</a>

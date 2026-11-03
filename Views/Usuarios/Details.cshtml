@@ -14,5 +14,5 @@
     <dd class="col-sm-9">@Model.PerfilAcesso</dd>
 </dl>
 
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+@if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a> }
 <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>

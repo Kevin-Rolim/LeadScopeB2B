@@ -21,10 +21,11 @@ public class PessoaFormViewModel
     [Url(ErrorMessage = "Informe uma URL válida.")]
     [StringLength(255)]
     [Display(Name = "LinkedIn")]
-    public string? UrlLinkedin { get; set; }
+    public string? UrlLinkedIn { get; set; }
 
     [Required(ErrorMessage = "Informe o status.")]
     [StringLength(50)]
+    [RegularExpression("^(PENDENTE|VALIDADO)$")]
     public string Status { get; set; } = "PENDENTE";
 
     [StringLength(100)]

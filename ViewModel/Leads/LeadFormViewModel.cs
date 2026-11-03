@@ -23,11 +23,11 @@ public class LeadFormViewModel
 
     [StringLength(50)]
     [Display(Name = "Status do vínculo")]
-    public string? StatusVinculo { get; set; }
+    public string? StatusVinculo { get; set; } = "INCERTO";
 
     [StringLength(50)]
     [Display(Name = "Status do lead")]
-    public string? StatusLead { get; set; }
+    public string? StatusLead { get; set; } = "NOVO";
 
     [Range(0, 100, ErrorMessage = "A confiança deve estar entre 0 e 100.")]
     [Display(Name = "Nível de confiança")]

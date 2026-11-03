@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class Revisoes
 {
-    [Key]
     public int Id { get; set; }
 
     [StringLength(100)]
@@ -12,7 +11,7 @@ public class Revisoes
 
     public string? Comentario { get; set; }
 
-    public DateTime DataHora { get; set; }
+    public DateTime? DataHora { get; set; }
 
     [Required]
     public int UsuarioId { get; set; }

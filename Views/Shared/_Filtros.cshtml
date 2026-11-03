@@ -1,0 +1,21 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var estados = controller switch {
+        "Pessoas" => new[]{"PENDENTE","VALIDADO","BLOQUEADO"},
+        "Empresas" => new[]{"PENDENTE","VALIDADA","INATIVA"},
+        _ => new[]{"NOVO","EM_ANALISE","QUALIFICADO","REJEITADO"}
+    };
+}
+<form method="get" class="row g-2 mb-3">
+    @foreach(var chave in new[]{"pessoaId","empresaId"}) {
+        if(Context.Request.Query.TryGetValue(chave,out var valor)) {<input type="hidden" name="@chave" value="@valor" />}
+    }
+    <div class="col-md"><label for="busca" class="form-label">Pesquisar</label><input id="busca" name="busca" value="@Context.Request.Query["busca"]" class="form-control" maxlength="200" placeholder="Nome, empresa ou informação de contato" /></div>
+    <div class="col-md-3"><label for="status" class="form-label">Status</label><select id="status" name="status" class="form-select"><option value="">Todos</option>
+        @foreach(var estado in estados) { <option value="@estado" selected="@(Context.Request.Query["status"] == estado)">@estado</option> }
+    </select></div>
+    @if(controller is "Empresas" or "Leads") {
+        <div class="col-md-2"><label for="cnae" class="form-label">CNAE</label><input id="cnae" name="cnae" value="@Context.Request.Query["cnae"]" class="form-control" maxlength="7" placeholder="7 dígitos" /></div>
+    }
+    <div class="col-auto align-self-end"><button type="submit" class="btn btn-outline-primary">Filtrar</button> <a asp-action="Index" class="btn btn-outline-secondary">Limpar</a></div>
+</form>

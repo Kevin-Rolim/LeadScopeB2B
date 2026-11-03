@@ -1,0 +1,17 @@
+@model IReadOnlyList<DadosColetados>
+@{ViewData["Title"]="Dados coletados";}
+<h1 class="h3">Dados coletados</h1>
+<p>Evidências externas aguardam avaliação humana e não representam dados automaticamente validados. Até 200 registros por consulta.</p>
+<div class="table-responsive"><table class="table"><thead><tr><th>Destino</th><th>Campo</th><th>Valor</th><th>Fonte</th><th>Confiança</th><th>Revisão</th></tr></thead><tbody>
+@foreach(var d in Model) {
+<tr><td>
+@if(d.PessoaId.HasValue){<a asp-controller="Pessoas" asp-action="Details" asp-route-id="@d.PessoaId">Pessoa @d.PessoaId</a>}
+else{<a asp-controller="Empresas" asp-action="Details" asp-route-id="@d.EmpresaId">Empresa @d.EmpresaId</a>}
+</td><td>@d.Campo</td><td>@d.Valor</td><td><a asp-controller="Fontes" asp-action="Index">@(d.FonteDados?.Nome ?? $"Fonte {d.FonteDadosId}")</a></td><td>@d.NivelConfianca</td><td>
+@if((d.EmpresaId.HasValue && new[]{"RazaoSocial","NomeFantasia","Porte","Cidade","Estado","UrlSite","Segmento","Email","Telefone"}.Contains(d.Campo) || d.PessoaId.HasValue && new[]{"Nome","Email","Telefone","UrlLinkedIn","Origem"}.Contains(d.Campo))) {
+<a asp-action="Revisar" asp-route-id="@d.Id">Comparar e revisar</a>
+}
+</td></tr>
+}
+</tbody></table></div>
+@if(Model.Count==0){<p>Nenhum dado coletado.</p>}

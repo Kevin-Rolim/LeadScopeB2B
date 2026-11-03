@@ -1,0 +1,17 @@
+@model IReadOnlyList<Cnaes>
+@{ViewData["Title"]="CNAEs";}
+<h1 class="h3">CNAEs</h1>
+<p>Consulte por código ou descrição. A busca retorna até 200 resultados.</p>
+<form method="get" class="d-flex gap-2 mb-3"><input name="busca" value="@Context.Request.Query["busca"]" class="form-control" aria-label="Pesquisar CNAE" maxlength="200" /><button class="btn btn-primary">Pesquisar</button></form>
+<table class="table table-striped"><thead><tr><th>Código</th><th>Descrição</th></tr></thead><tbody>
+@foreach(var c in Model) {<tr><td>@c.Numero</td><td>@c.Descricao</td></tr>}
+</tbody></table>
+@if(Model.Count==0){<p>Nenhum CNAE cadastrado ou encontrado.</p>}
+@if(User.IsInRole("ADMIN")) {
+<h2 class="h5 mt-4">Cadastrar CNAE</h2>
+<form asp-action="Create" method="post" class="card card-body gap-2">
+    <label for="Numero">Código sem pontuação</label><input id="Numero" name="Numero" class="form-control" required pattern="[0-9]{7}" maxlength="7" />
+    <label for="Descricao">Descrição</label><input id="Descricao" name="Descricao" class="form-control" required maxlength="300" />
+    <button class="btn btn-primary align-self-start">Cadastrar</button>
+</form>
+}

@@ -8,13 +8,11 @@
         <h1 class="h3 mb-1">Empresas</h1>
         <p class="text-muted mb-0">Base de organizações prospectadas.</p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Nova empresa</a>
+    @if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Create" class="btn btn-primary">Nova empresa</a> }
 </div>
 
-@if (TempData["Sucesso"] is string mensagem)
-{
-    <div class="alert alert-success">@mensagem</div>
-}
+
+<partial name="_Filtros" />
 
 <div class="table-responsive">
     <table class="table table-striped align-middle">
@@ -45,7 +43,7 @@
                 <td>@(empresa.Status ?? "—")</td>
                 <td class="text-end">
                     <a asp-action="Details" asp-route-id="@empresa.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
-                    <a asp-action="Edit" asp-route-id="@empresa.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                    @if(User.IsInRole("ADMIN") || User.IsInRole("OPERACAO")) { <a asp-action="Edit" asp-route-id="@empresa.Id" class="btn btn-sm btn-outline-primary">Editar</a> }
                 </td>
             </tr>
         }
