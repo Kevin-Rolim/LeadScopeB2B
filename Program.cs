@@ -8,7 +8,6 @@ using LeadScopeB2B.Repositories.Interfaces;
 using LeadScopeB2B.Security;
 using LeadScopeB2B.Services;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -87,20 +86,19 @@ builder.Services.AddScoped<AutomacaoIntegracaoService>();
 builder.Services.AddHostedService<ColetaAutomaticaWorker>();
 builder.Services.AddScoped<AuditoriaService>();
 builder.Services.AddScoped<ExportacaoService>();
-builder.Services.AddScoped<SessaoEvents>();
 builder.Services.AddScoped<IPasswordHasher<Usuarios>, PasswordHasher<Usuarios>>();
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Conta/Login";
-        options.AccessDeniedPath = "/Conta/Negado";
-        options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.SlidingExpiration = false;
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
-        options.EventsType = typeof(SessaoEvents);
-    })
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+    options.Cookie.Name = ".LeadScopeB2B.Session";
+});
+builder.Services.AddAuthentication(SessionAuthenticationHandler.SchemeName)
+    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(SessionAuthenticationHandler.SchemeName, _ => { })
     .AddScheme<AuthenticationSchemeOptions, IntegracaoAuthenticationHandler>(Acesso.Api, _ => { });
 builder.Services.AddAuthorization(options =>
 {
@@ -157,6 +155,7 @@ if (!app.Environment.IsDevelopment()) { app.UseHsts(); app.UseHttpsRedirection()
 app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter();
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

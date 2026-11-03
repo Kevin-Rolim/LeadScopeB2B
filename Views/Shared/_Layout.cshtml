@@ -43,7 +43,7 @@
                         }
                     </ul>
                     @if(User.Identity?.IsAuthenticated == true) {
-                        <form asp-controller="Conta" asp-action="Logout" method="post" class="d-flex gap-2 align-items-center"><a asp-controller="Conta" asp-action="Perfil" class="small text-nowrap">Meu perfil</a><button class="btn btn-sm btn-outline-secondary">Sair</button></form>
+                        <form asp-controller="Conta" asp-action="Logout" method="post" class="d-flex gap-2 align-items-center"><a asp-controller="Conta" asp-action="Perfil" class="small text-nowrap">Olá, @(Context.Session.GetString("Nome") ?? "Usuário")</a><button class="btn btn-sm btn-outline-secondary">Sair</button></form>
                     } else {<div class="d-flex gap-2"><a asp-controller="Conta" asp-action="Login" class="btn btn-outline-primary">Entrar</a><a asp-controller="Conta" asp-action="Cadastro" class="btn btn-primary">Criar conta</a></div>}
 
                 </div>

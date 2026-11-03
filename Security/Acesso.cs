@@ -2,8 +2,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using LeadScopeB2B.Repositories.Interfaces;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace LeadScopeB2B.Security;
 
@@ -29,21 +27,4 @@ public static class Acesso
         ], scheme));
     }
     public static int UsuarioId(this ClaimsPrincipal user) => int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-}
-
-// Revalida os dados da conta e o perfil a cada requisição.
-public class SessaoEvents(IUsuarioRepository usuarios) : CookieAuthenticationEvents
-{
-    public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)
-    {
-        if (!int.TryParse(context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var id)) { context.RejectPrincipal(); return; }
-        var usuario = await usuarios.ObterPorIdAsync(id);
-        if (usuario is null || Acesso.Papel(usuario) is null || context.Principal?.FindFirstValue("versao") != Acesso.Versao(usuario))
-        {
-            context.RejectPrincipal();
-            await context.HttpContext.SignOutAsync();
-            return;
-        }
-        context.ReplacePrincipal(Acesso.Principal(usuario, CookieAuthenticationDefaults.AuthenticationScheme));
-    }
 }

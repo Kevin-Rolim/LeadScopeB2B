@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using LeadScopeB2B.Security;
 using LeadScopeB2B.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -29,7 +27,7 @@ public class ContaController(ContaService service, AuditoriaService auditoria, R
         var usuario = await service.AutenticarAsync(model.Email, model.Senha);
         if (usuario is null) { ModelState.AddModelError("", "E-mail ou senha inválidos, ou conta indisponível."); return View(model); }
         await auditoria.RegistrarAsync(usuario.Id, "LOGIN", "Acesso à interface.");
-        await EntrarAsync(usuario);
+        EntrarNaSessao(usuario);
         var destino = Acesso.Papel(usuario) == "ADMIN" ? Url.Action("Index", "Usuarios") : Acesso.Papel(usuario) == "OPERACAO" ? Url.Action("Index", "Leads") : Url.Action("Index", "Empresas");
         return LocalRedirect(Url.IsLocalUrl(model.ReturnUrl) ? model.ReturnUrl! : destino!);
     }
@@ -66,7 +64,7 @@ public class ContaController(ContaService service, AuditoriaService auditoria, R
             try
             {
                 var usuario = await service.AtualizarPerfilAsync(User.UsuarioId(), model);
-                await EntrarAsync(usuario);
+                EntrarNaSessao(usuario);
                 TempData["Sucesso"] = "Perfil atualizado. Suas outras sessões foram encerradas.";
                 return RedirectToAction(nameof(Perfil));
             }
@@ -86,7 +84,7 @@ public class ContaController(ContaService service, AuditoriaService auditoria, R
         try
         {
             await service.AlterarSenhaAsync(User.UsuarioId(), model);
-            await HttpContext.SignOutAsync();
+            SessaoUsuario.Limpar(HttpContext.Session);
             TempData["Sucesso"] = "Senha alterada. Entre novamente com a nova senha.";
             return RedirectToAction(nameof(Login));
         }
@@ -128,7 +126,7 @@ public class ContaController(ContaService service, AuditoriaService auditoria, R
             try
             {
                 await recuperacao.RedefinirAsync(model);
-                await HttpContext.SignOutAsync();
+                SessaoUsuario.Limpar(HttpContext.Session);
                 TempData["Sucesso"] = "Senha redefinida. Entre com sua nova senha.";
                 return RedirectToAction(nameof(Login));
             }
@@ -139,15 +137,14 @@ public class ContaController(ContaService service, AuditoriaService auditoria, R
     }
 
     [HttpPost]
-    public async Task<IActionResult> Logout()
+    public IActionResult Logout()
     {
-        await HttpContext.SignOutAsync();
+        SessaoUsuario.Limpar(HttpContext.Session);
         return RedirectToAction(nameof(Login));
     }
 
     [AllowAnonymous, HttpGet]
     public IActionResult Negado() { Response.StatusCode = 403; return View(); }
 
-    private Task EntrarAsync(Usuarios usuario) => HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-        Acesso.Principal(usuario, CookieAuthenticationDefaults.AuthenticationScheme));
+    private void EntrarNaSessao(Usuarios usuario) => SessaoUsuario.Gravar(HttpContext.Session, usuario);
 }
