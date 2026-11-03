@@ -12,9 +12,9 @@ BEGIN TRANSACTION;
 INSERT INTO ConjuntoPermissoes (Nome, Descricao)
 SELECT Dados.Nome, Dados.Descricao
 FROM (VALUES
-    ('Admin', 'Acesso completo ao sistema'),
-    ('Gestor', 'Gerenciamento de cadastros, leads e revisoes'),
-    ('Leitura', 'Acesso somente para consulta')
+    ('Administrador', 'Acesso completo ao sistema'),
+    ('Revisor', 'Consulta e revisão de vínculos'),
+    ('Usuário', 'Cadastro, pesquisa e exportação')
 ) AS Dados(Nome, Descricao)
 WHERE NOT EXISTS (
     SELECT 1
@@ -29,9 +29,9 @@ WHERE NOT EXISTS (
 INSERT INTO PerfisAcesso (Nome, ConjuntoPermissoesId)
 SELECT Dados.Nome, Permissoes.Id
 FROM (VALUES
-    ('Administrador Geral', 'Admin'),
-    ('Gestor Comercial', 'Gestor'),
-    ('Analista Comercial', 'Leitura')
+    ('Administrador Geral', 'Administrador'),
+    ('Revisor', 'Revisor'),
+    ('Usuário', 'Usuário')
 ) AS Dados(Nome, Conjunto)
 INNER JOIN ConjuntoPermissoes AS Permissoes
     ON Permissoes.Nome = Dados.Conjunto

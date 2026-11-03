@@ -1,0 +1,4 @@
+<div class="toast-stack" aria-live="polite" aria-atomic="false">
+@if(TempData["Sucesso"] is string sucesso) { <div class="notice notice-success" role="status"><partial name="_Icon" model='"circle-check"' /><span>@sucesso</span><button type="button" class="icon-button" data-dismiss aria-label="Fechar notificação"><partial name="_Icon" model='"x"' /></button></div> }
+@if(TempData["Erro"] is string erro) { <div class="notice notice-danger" role="alert"><partial name="_Icon" model='"circle-alert"' /><span>@erro</span><button type="button" class="icon-button" data-dismiss aria-label="Fechar notificação"><partial name="_Icon" model='"x"' /></button></div> }
+</div>

@@ -12,20 +12,20 @@ public class LeadFormViewModel
     [Display(Name = "Empresa")]
     public int EmpresaId { get; set; }
 
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     public string? Cargo { get; set; }
 
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     public string? Departamento { get; set; }
 
-    [StringLength(50)]
+    [StringLength(50, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     public string? Senioridade { get; set; }
 
-    [StringLength(50)]
+    [StringLength(50, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     [Display(Name = "Status do vínculo")]
     public string? StatusVinculo { get; set; } = "INCERTO";
 
-    [StringLength(50)]
+    [StringLength(50, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     [Display(Name = "Status do lead")]
     public string? StatusLead { get; set; } = "NOVO";
 
@@ -33,7 +33,7 @@ public class LeadFormViewModel
     [Display(Name = "Nível de confiança")]
     public decimal? NivelConfianca { get; set; }
 
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     [Display(Name = "Fonte do vínculo")]
     public string? FonteVinculo { get; set; }
 

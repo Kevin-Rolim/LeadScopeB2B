@@ -4,10 +4,10 @@ namespace LeadScopeB2B.ViewModels.Usuarios;
 
 public class CadastroViewModel
 {
-    [Required(ErrorMessage = "Informe o nome."), StringLength(100)]
+    [Required(ErrorMessage = "Informe o nome."), StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.")]
     public string Nome { get; set; } = "";
 
-    [Required(ErrorMessage = "Informe o e-mail."), EmailAddress(ErrorMessage = "Informe um e-mail válido."), StringLength(150)]
+    [Required(ErrorMessage = "Informe o e-mail."), EmailAddress(ErrorMessage = "Informe um e-mail válido."), StringLength(150, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.")]
     [Display(Name = "E-mail")]
     public string Email { get; set; } = "";
 
@@ -16,7 +16,7 @@ public class CadastroViewModel
     public string Senha { get; set; } = "";
 
     [Required(ErrorMessage = "Confirme a senha."), Compare(nameof(Senha), ErrorMessage = "As senhas não coincidem.")]
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     [DataType(DataType.Password), Display(Name = "Confirmação de senha")]
     public string ConfirmacaoSenha { get; set; } = "";
 }

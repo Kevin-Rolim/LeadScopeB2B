@@ -285,16 +285,16 @@ CREATE TABLE dbo.ExportacoesPessoasEmpresas (
     -- Somente dados de referencia para cadastro e autorizacao.
     -- Nao cria usuarios, senhas ficticias, empresas nem leads.
     INSERT INTO dbo.ConjuntoPermissoes (Nome, Descricao) VALUES
-        ('Admin', 'Acesso administrativo'),
-        ('Gestor', 'Acesso operacional'),
-        ('Leitura', 'Acesso somente leitura');
+        ('Administrador', 'Acesso administrativo'),
+        ('Revisor', 'Consulta e revisão de vínculos'),
+        ('Usuário', 'Cadastro, pesquisa e exportação');
 
     INSERT INTO dbo.PerfisAcesso (Nome, ConjuntoPermissoesId)
-        SELECT 'Administrador Geral', Id FROM dbo.ConjuntoPermissoes WHERE Nome = 'Admin';
+        SELECT 'Administrador Geral', Id FROM dbo.ConjuntoPermissoes WHERE Nome = 'Administrador';
     INSERT INTO dbo.PerfisAcesso (Nome, ConjuntoPermissoesId)
-        SELECT 'Gestor Comercial', Id FROM dbo.ConjuntoPermissoes WHERE Nome = 'Gestor';
+        SELECT 'Revisor', Id FROM dbo.ConjuntoPermissoes WHERE Nome = 'Revisor';
     INSERT INTO dbo.PerfisAcesso (Nome, ConjuntoPermissoesId)
-        SELECT 'Analista Comercial', Id FROM dbo.ConjuntoPermissoes WHERE Nome = 'Leitura';
+        SELECT 'Usuário', Id FROM dbo.ConjuntoPermissoes WHERE Nome = 'Usuário';
 
     COMMIT TRANSACTION;
 END TRY

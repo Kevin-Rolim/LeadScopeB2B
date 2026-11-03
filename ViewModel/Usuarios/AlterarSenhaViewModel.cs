@@ -4,7 +4,7 @@ namespace LeadScopeB2B.ViewModels.Usuarios;
 
 public class AlterarSenhaViewModel
 {
-    [Required(ErrorMessage = "Informe a senha atual."), StringLength(100)]
+    [Required(ErrorMessage = "Informe a senha atual."), StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.")]
     [DataType(DataType.Password), Display(Name = "Senha atual")]
     public string SenhaAtual { get; set; } = "";
 
@@ -13,7 +13,7 @@ public class AlterarSenhaViewModel
     public string NovaSenha { get; set; } = "";
 
     [Required(ErrorMessage = "Confirme a nova senha."), Compare(nameof(NovaSenha), ErrorMessage = "As senhas não coincidem.")]
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     [DataType(DataType.Password), Display(Name = "Confirmação da nova senha")]
     public string ConfirmacaoSenha { get; set; } = "";
 }

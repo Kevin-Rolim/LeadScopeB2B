@@ -55,7 +55,7 @@ internal static class ContaFlowTests
             var created = await PostAsync(anon, "/Conta/Cadastro", new() { { "Nome", "Usuário público" }, { "Email", Email.ToUpperInvariant() }, { "Senha", Senha }, { "ConfirmacaoSenha", Senha }, { "PerfilAcessoId", "1" }, { "Status", "BLOQUEADO" }, { "Id", admin.Id.ToString() } });
             var usuario = (await repo.ObterPorEmailAsync(Email))!;
             check(created.StatusCode == HttpStatusCode.Redirect && created.Headers.Location?.AbsolutePathOrOriginal() == "/Conta/Login", "cadastro pela interface direciona para login");
-            check(Acesso.Papel(usuario) == "LEITURA", "campos forjados não promovem cadastro público a administrador");
+            check(Acesso.Papel(usuario) == "USUARIO", "campos forjados não promovem cadastro público a administrador");
             check(usuario.SenhaHash != Senha && hasher.VerifyHashedPassword(usuario, usuario.SenhaHash, Senha) != PasswordVerificationResult.Failed, "cadastro HTTP armazena hash seguro no SQL Server");
             check(Texto(await anon.GetStringAsync("/Conta/Login")).Contains("Cadastro realizado"), "cadastro exibe confirmação adequada");
             var duplicate = await PostAsync(anon, "/Conta/Cadastro", new() { { "Nome", "Duplicado" }, { "Email", Email }, { "Senha", Senha }, { "ConfirmacaoSenha", Senha } });
@@ -71,7 +71,7 @@ internal static class ContaFlowTests
             check((await LoginAsync(observador, Email, Senha)).StatusCode == HttpStatusCode.Redirect, "segunda sessão da conta criada");
             var adminLogin = await LoginAsync(adminWeb, "admin@example.test", "Teste#Local123!");
             check(adminLogin.StatusCode == HttpStatusCode.Redirect && adminLogin.Headers.Location?.OriginalString == "/Usuarios", "administrador entra na área administrativa");
-            check((await titular.GetAsync("/Usuarios")).StatusCode == HttpStatusCode.Redirect && (await titular.GetAsync("/Fontes")).StatusCode == HttpStatusCode.Redirect, "usuário público não acessa áreas administrativas");
+            check((await titular.GetAsync("/Usuarios")).StatusCode == HttpStatusCode.Redirect && (await titular.GetAsync("/Auditoria")).StatusCode == HttpStatusCode.Redirect, "usuário público não acessa áreas administrativas");
             var forgedAdmin = await PostAsync(titular, $"/Usuarios/Edit/{admin.Id}", new() { { "Id", admin.Id.ToString() }, { "Nome", "Invadido" }, { "PerfilAcessoId", "1" } }, "/Conta/Perfil");
             check(forgedAdmin.StatusCode == HttpStatusCode.Redirect && (await repo.ObterPorIdAsync(admin.Id))!.Nome == admin.Nome, "servidor bloqueia POST administrativo forjado");
             check((await titular.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.OK && (await titular.GetAsync("/Conta/AlterarSenha")).StatusCode == HttpStatusCode.OK, "titular acessa perfil e alteração de senha");
@@ -83,7 +83,7 @@ internal static class ContaFlowTests
             check(duplicateProfile.StatusCode == HttpStatusCode.OK && (await repo.ObterPorIdAsync(usuario.Id))!.Email == Email, "perfil impede e-mail duplicado");
             var profile = await PostAsync(titular, "/Conta/Perfil", new() { { "Nome", "Titular atualizado" }, { "Email", EmailNovo }, { "SenhaAtual", Senha }, { "Id", admin.Id.ToString() }, { "PerfilAcessoId", "1" }, { "Status", "ATIVO" } });
             usuario = (await repo.ObterPorIdAsync(usuario.Id))!;
-            check(profile.StatusCode == HttpStatusCode.Redirect && usuario.Nome == "Titular atualizado" && usuario.Email == EmailNovo && Acesso.Papel(usuario) == "LEITURA" && (await repo.ObterPorIdAsync(admin.Id))!.Nome == admin.Nome, "perfil atualiza apenas o titular sem permitir troca de permissões");
+            check(profile.StatusCode == HttpStatusCode.Redirect && usuario.Nome == "Titular atualizado" && usuario.Email == EmailNovo && Acesso.Papel(usuario) == "USUARIO" && (await repo.ObterPorIdAsync(admin.Id))!.Nome == admin.Nome, "perfil atualiza apenas o titular sem permitir troca de permissões");
             check((await titular.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.OK && (await observador.GetAsync("/Conta/Perfil")).StatusCode == HttpStatusCode.Redirect, "perfil renova sessão atual e revoga a outra");
             check((await LoginAsync(observador, EmailNovo, Senha)).StatusCode == HttpStatusCode.Redirect, "e-mail atualizado permite novo login");
             var badChange = await PostAsync(titular, "/Conta/AlterarSenha", new() { { "SenhaAtual", "errada" }, { "NovaSenha", SenhaNova }, { "ConfirmacaoSenha", SenhaNova } });
@@ -177,7 +177,7 @@ internal static class ContaFlowTests
 
     private static string? AbsolutePathOrOriginal(this Uri uri) => uri.IsAbsoluteUri ? uri.AbsolutePath : uri.OriginalString;
 
-    private sealed class AplicacaoTeste : IAsyncDisposable
+    internal sealed class AplicacaoTeste : IAsyncDisposable
     {
         private readonly Process _process;
         private readonly StringBuilder _log;
@@ -192,8 +192,6 @@ internal static class ContaFlowTests
             var start = new ProcessStartInfo("dotnet") { WorkingDirectory = root, UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
             start.ArgumentList.Add(Path.Combine(root, "bin/Debug/net10.0/LeadScopeB2B.dll"));
             start.Environment["ConnectionStrings__DefaultConnection"] = connection; start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development"; start.Environment["ASPNETCORE_URLS"] = url;
-            start.Environment["MotorIntegracoes__AutomacaoHabilitada"] = "false";
-            start.Environment["MotorIntegracoes__Diretorio"] = Path.Combine(chaves, "integracoes-" + Guid.NewGuid().ToString("N"));
             start.Environment["DataProtection__DiretorioChaves"] = chaves;
             start.Environment["RecuperacaoAcesso__Habilitado"] = smtp.HasValue.ToString(); start.Environment["RecuperacaoAcesso__UrlPublica"] = url;
             start.Environment["EmailSmtp__Host"] = smtp.HasValue ? "127.0.0.1" : ""; start.Environment["EmailSmtp__Porta"] = (smtp ?? 587).ToString(); start.Environment["EmailSmtp__Remetente"] = "leadscope@example.test"; start.Environment["EmailSmtp__UsarTls"] = "false";

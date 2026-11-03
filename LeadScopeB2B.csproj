@@ -10,15 +10,20 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
-    <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Tests/**/*.cs" />
+    <Content Remove="node_modules/**;Design de referencia/**;Frontend/**;scripts/**;artifacts/**" />
+    <None Remove="node_modules/**;Design de referencia/**;artifacts/**" />
     <Content Remove="Tests/**" />
     <Content Remove="App_Data/**" />
     <None Remove="App_Data/**" />
     <None Remove="Tests/**" />
   </ItemGroup>
+
+  <Target Name="CheckUiAssets" BeforeTargets="Build;Publish">
+    <Error Condition="!Exists('wwwroot/css/site.css') Or !Exists('wwwroot/icons/lucide.svg')" Text="Recursos visuais ausentes. Execute npm ci e npm run build antes da compilação." />
+  </Target>
 </Project>
 

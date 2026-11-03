@@ -9,14 +9,14 @@ namespace LeadScopeB2B.Security;
 
 public static class Acesso
 {
-    public const string Api = "Integracao";
+    public const string Revisao = "Revisao";
     public const string Edicao = "Edicao";
     public const string Admin = "Admin";
     public static string? Papel(Usuarios usuario) => usuario.PerfisAcesso.ConjuntoPermissoes.Nome switch
     {
-        "Admin" => "ADMIN",
-        "Gestor" => "OPERACAO",
-        "Leitura" => "LEITURA",
+        "Administrador" => "ADMIN",
+        "Revisor" => "REVISOR",
+        "Usuário" => "USUARIO",
         _ => null
     };
     public static string Versao(Usuarios usuario) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{usuario.SenhaHash}:{usuario.Nome}:{usuario.Email}:{usuario.PerfilAcessoId}")));

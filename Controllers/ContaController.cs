@@ -30,7 +30,7 @@ public class ContaController(ContaService service, AuditoriaService auditoria, R
         if (usuario is null) { ModelState.AddModelError("", "E-mail ou senha inválidos, ou conta indisponível."); return View(model); }
         await auditoria.RegistrarAsync(usuario.Id, "LOGIN", "Acesso à interface.");
         await EntrarAsync(usuario);
-        var destino = Acesso.Papel(usuario) == "ADMIN" ? Url.Action("Index", "Usuarios") : Acesso.Papel(usuario) == "OPERACAO" ? Url.Action("Index", "Leads") : Url.Action("Index", "Empresas");
+        var destino = Acesso.Papel(usuario) == "ADMIN" ? Url.Action("Index", "Usuarios") : Acesso.Papel(usuario) == "REVISOR" ? Url.Action("Index", "Leads") : Url.Action("Index", "Empresas");
         return LocalRedirect(Url.IsLocalUrl(model.ReturnUrl) ? model.ReturnUrl! : destino!);
     }
 

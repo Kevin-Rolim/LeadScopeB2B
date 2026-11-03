@@ -101,10 +101,11 @@ public class LeadsController : Controller
         TempData["Sucesso"] = "Registro removido da lista de ativos.";
         return RedirectToAction(nameof(Index));
     }
-    [HttpPost, Authorize(Policy = Acesso.Edicao)]
+    [HttpPost, Authorize(Policy = Acesso.Revisao)]
     public async Task<IActionResult> Revisar(int pessoaId, int empresaId, string decisao, string? comentario)
     {
         await _service.RevisarAsync(pessoaId, empresaId, User.UsuarioId(), decisao, comentario);
+        TempData["Sucesso"] = "Revisão registrada com sucesso.";
         return RedirectToAction(nameof(Details), new { pessoaId, empresaId });
     }
     [HttpPost, Authorize(Policy = Acesso.Edicao)]

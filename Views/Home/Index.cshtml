@@ -1,49 +1,21 @@
+@model LeadScopeB2B.ViewModels.Home.OverviewViewModel
 @{
-    ViewData["Title"] = "Início";
+ ViewData["Title"] = "Início";
+ var pending = Model.Leads.Where(l => l.StatusLead is "NOVO" or "EM_ANALISE").ToList();
+ var canEdit = User.IsInRole("ADMIN") || User.IsInRole("USUARIO");
+ var canReview = User.IsInRole("ADMIN") || User.IsInRole("REVISOR");
+ var role = User.IsInRole("ADMIN") ? "Administrador" : canReview ? "Revisor" : "Usuário";
+ var firstName = User.Identity?.Name?.Split(' ')[0];
+ var metrics = new[] { ("Empresas", Model.Empresas.Count, $"{Model.Empresas.Count(e => e.Status == "VALIDADA")} ativas · {Model.Empresas.Count(e => e.Status == "PENDENTE")} em verificação", "building-2"), ("Pessoas", Model.Pessoas.Count, "Contatos cadastrados na base", "users"), ("Leads", Model.Leads.Count, $"{Model.Leads.Count(l => l.StatusLead == "QUALIFICADO")} qualificados · {Model.Leads.Count(l => l.StatusLead == "REJEITADO")} rejeitados", "target"), ("Pendentes de revisão", pending.Count, "Aguardando decisão", "clipboard-check") };
 }
-
-<div class="py-4">
-    <h1 class="display-6">LeadScope B2B</h1>
-    <p class="lead text-muted">Organize empresas, contatos e os vínculos que formam sua base de leads.</p>
-</div>
-
-<div class="row g-3">
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="h5">Leads</h2>
-                <p class="text-muted">Consulte e qualifique vínculos entre pessoas e empresas.</p>
-                <a asp-controller="Leads" asp-action="Index" class="btn btn-primary">Acessar</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="h5">Empresas</h2>
-                <p class="text-muted">Mantenha os dados das organizações prospectadas.</p>
-                <a asp-controller="Empresas" asp-action="Index" class="btn btn-outline-primary">Acessar</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="h5">Pessoas</h2>
-                <p class="text-muted">Gerencie contatos, origem e situação de bloqueio.</p>
-                <a asp-controller="Pessoas" asp-action="Index" class="btn btn-outline-primary">Acessar</a>
-            </div>
-        </div>
-    </div>
-    @if(User.IsInRole("ADMIN")) {
-    <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="h5">Usuários</h2>
-                <p class="text-muted">Cadastre usuários e associe perfis de acesso.</p>
-                <a asp-controller="Usuarios" asp-action="Index" class="btn btn-outline-primary">Acessar</a>
-            </div>
-        </div>
-    </div>
-    }
-</div>
+@{ var heading = new PageHeader($"Olá, {firstName}", $"Perfil {role} · {DateTime.Now.ToString("dddd, dd MMMM", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))}"); }
+<partial name="_PageHeader" model="heading" />
+<div class="metric-grid">@foreach(var metric in metrics) { <div class="metric"><div class="metric-label">@metric.Item1<partial name="_Icon" model="metric.Item4" /></div><p class="metric-value">@metric.Item2</p><p class="metric-detail">@metric.Item3</p></div> }</div>
+<div class="overview-grid"><section class="surface overflow-hidden"><header class="surface-heading flex items-center justify-between"><div><h2 class="text-sm font-semibold">Leads pendentes de revisão</h2><p class="text-xs text-muted-foreground font-normal">Novos e em análise · ordenados por pessoa</p></div><a asp-controller="Leads" asp-action="Index" class="text-xs font-medium">Ver todos →</a></header>
+@if(pending.Count == 0) { <partial name="_EmptyState" model='new EmptyState("Nenhum lead aguardando revisão", "Os vínculos novos e em análise aparecerão aqui.", "clipboard-check")' /> }
+else { <div class="table-scroll"><table class="data-table"><thead><tr><th>Pessoa</th><th>Empresa</th><th>Confiança</th><th><span class="sr-only">Ação</span></th></tr></thead><tbody>@foreach(var lead in pending.Take(5)) { <tr><td><p class="font-medium">@lead.Pessoa</p><p class="text-xs text-muted-foreground">@lead.Cargo</p></td><td>@lead.Empresa</td><td><partial name="_Confidence" model="lead.NivelConfianca" /></td><td><a data-panel asp-controller="Leads" asp-action="Details" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" class="text-xs font-medium">@(canReview ? "Revisar" : "Detalhes")</a></td></tr> }</tbody></table></div> }
+</section><aside class="space-y-6"><section class="surface"><h2 class="surface-heading text-sm">Atalhos</h2><div class="p-2">
+@if(canEdit) { <a data-panel asp-controller="Empresas" asp-action="Create" class="shortcut"><span class="shortcut-icon"><partial name="_Icon" model='"plus"' /></span>Cadastrar empresa<partial name="_Icon" model='"arrow-right"' /></a> }
+<a asp-controller="Empresas" asp-action="Index" class="shortcut"><span class="shortcut-icon"><partial name="_Icon" model='"building-2"' /></span>Pesquisar empresas</a>
+@if(canReview) { <a asp-controller="Leads" asp-action="Index" asp-route-status="EM_ANALISE" class="shortcut"><span class="shortcut-icon"><partial name="_Icon" model='"clipboard-check"' /></span>Revisar leads</a> }
+</div></section><section class="surface p-4"><h2 class="text-sm font-semibold">Status dos leads</h2><div class="mt-3 space-y-2">@foreach(var status in new[]{"NOVO","EM_ANALISE","QUALIFICADO","REJEITADO"}) { <div class="flex items-center justify-between"><partial name="_Status" model="status" /><span class="font-mono">@Model.Leads.Count(l => l.StatusLead == status)</span></div> }</div></section></aside></div>

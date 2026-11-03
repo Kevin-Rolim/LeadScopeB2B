@@ -1,0 +1,23 @@
+@model List<LeadScopeB2B.Services.ResultadoCsv>
+@{ ViewData["Title"] = "Importar CSV"; }
+<partial name="_PageHeader" model='new PageHeader("Importar CSV", "Adicione empresas e pessoas à base a partir de um arquivo.")' />
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
+<section class="surface"><h2 class="surface-heading text-sm">Importar cadastros</h2>
+<form method="post" enctype="multipart/form-data" class="form-surface">
+<div asp-validation-summary="All" role="alert"></div>
+<label for="tipo" class="field-label">Cadastro</label><select id="tipo" name="tipo" class="input"><option value="empresas">Empresas</option><option value="pessoas">Pessoas</option></select>
+<label for="arquivo" class="field-label mt-4">Arquivo CSV</label><input id="arquivo" name="arquivo" type="file" accept=".csv,text/csv" required class="input" aria-describedby="csv-limit" />
+<p id="csv-limit" class="text-xs text-muted-foreground">UTF-8 · separado por ponto e vírgula · até 1 MiB e 1000 registros</p>
+<div class="form-actions"><button class="button button-primary"><partial name="_Icon" model='"upload"' />Importar</button></div>
+</form></section>
+<aside class="surface p-4 space-y-4"><div class="flex items-center gap-2 font-semibold"><partial name="_Icon" model='"file-spreadsheet"' />Formato do arquivo</div>
+<p class="text-xs text-muted-foreground">Inclua o cabeçalho na primeira linha. Cada registro válido é salvo; erros não desfazem os registros anteriores. Reenvios identificam duplicidades por CNPJ ou e-mail/LinkedIn.</p>
+<div><h2 class="text-xs font-semibold mb-1">Empresas</h2><code>RazaoSocial;Cnpj;NomeFantasia;Email;Telefone;Cidade;Estado</code><p class="text-xs text-muted-foreground mt-1">RazaoSocial e Cnpj obrigatórios.</p></div>
+<div><h2 class="text-xs font-semibold mb-1">Pessoas</h2><code>Nome;Email;Telefone;UrlLinkedIn</code><p class="text-xs text-muted-foreground mt-1">Nome e Email ou UrlLinkedIn obrigatórios. As demais colunas são opcionais.</p></div>
+</aside></div>
+@if(Model.Count > 0) {
+<section class="surface mt-6 overflow-hidden"><h2 class="surface-heading text-sm">Resultado da importação</h2><p role="status" class="p-4 text-sm">@Model.Count(r => r.Sucesso) cadastrados; @Model.Count(r => !r.Sucesso) erros.</p>
+<div class="table-scroll"><table class="data-table"><thead><tr><th>Linha inicial</th><th>Resultado</th><th>Mensagem</th></tr></thead><tbody>
+@foreach(var r in Model) { <tr><td class="font-mono text-xs">@r.Registro</td><td><span class="status @(r.Sucesso ? "status-success" : "status-danger")">@(r.Sucesso ? "Sucesso" : "Erro")</span></td><td>@r.Mensagem</td></tr> }
+</tbody></table></div></section>
+}

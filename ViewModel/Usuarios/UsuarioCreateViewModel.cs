@@ -5,13 +5,13 @@ namespace LeadScopeB2B.ViewModels.Usuarios;
 public class UsuarioCreateViewModel
 {
     [Required(ErrorMessage = "Informe o nome.")]
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     [Display(Name = "Nome")]
     public string Nome { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe o e-mail.")]
     [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
-    [StringLength(150)]
+    [StringLength(150, ErrorMessage="O campo {0} deve ter no máximo {1} caracteres.") ]
     [Display(Name = "E-mail")]
     public string Email { get; set; } = string.Empty;
 

@@ -31,16 +31,10 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=LeadScopeB2B;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
       DataProtection__DiretorioChaves: /app/keys
-      MotorIntegracoes__Diretorio: /app/integracoes
-      MotorIntegracoes__AutomacaoHabilitada: ${COLETA_HABILITADA:-false}
-      MotorIntegracoes__PermitirEscritaAutomatica: ${INTEGRACOES_ESCRITA_AUTOMATICA:-false}
-      MotorIntegracoes__UrlPublicaOAuth: ${INTEGRACOES_URL_PUBLICA_OAUTH:-}
-      MotorIntegracoes__RedesPrivadasJson: ${INTEGRACOES_REDES_PRIVADAS_JSON:-}
     ports:
       - "127.0.0.1:18080:8080"
     volumes:
       - dataprotection_keys:/app/keys
-      - integracoes_data:/app/integracoes
     depends_on:
       sqlserver:
         condition: service_healthy

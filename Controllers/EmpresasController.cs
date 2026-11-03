@@ -9,13 +9,11 @@ public class EmpresasController : Controller
 {
     private readonly EmpresaService _service;
     private readonly CnaeService _cnaes;
-    private readonly EnriquecimentoEmpresaService _enriquecimento;
 
-    public EmpresasController(EmpresaService service, CnaeService cnaes, EnriquecimentoEmpresaService enriquecimento)
+    public EmpresasController(EmpresaService service, CnaeService cnaes)
     {
         _service = service;
         _cnaes = cnaes;
-        _enriquecimento = enriquecimento;
     }
 
     public async Task<IActionResult> Index(string? busca, string? status, string? cnae)
@@ -23,25 +21,13 @@ public class EmpresasController : Controller
         return View(await _service.ListarAsync(busca, status, cnae));
     }
 
-    public async Task<IActionResult> Details(int id)
+    public async Task<IActionResult> Details(int id, string? cnaeBusca)
     {
         var empresa = await _service.ObterDetalhesAsync(id);
         if (empresa is null) return NotFound();
         empresa.Cnaes = await _cnaes.ListarDaEmpresaAsync(id);
-        empresa.Enriquecimento = await _enriquecimento.ObterAsync(id, HttpContext.RequestAborted);
+        ViewBag.CatalogoCnaes = await _cnaes.ListarAsync(cnaeBusca);
         return View(empresa);
-    }
-
-    [HttpPost, Authorize(Policy = Acesso.Admin), ValidateAntiForgeryToken]
-    public async Task<IActionResult> Enriquecer(int id, Guid integracaoId, string operacaoId, bool autorizarConsumo)
-    {
-        try
-        {
-            var resultado = await _enriquecimento.EnriquecerAsync(id, integracaoId, operacaoId, autorizarConsumo, User.UsuarioId(), HttpContext.RequestAborted);
-            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
-        }
-        catch (LeadScopeB2B.Integration.Universal.IntegracaoException ex) { TempData["Erro"] = ex.Message; }
-        return RedirectToAction(nameof(Details), new { id });
     }
 
     [Authorize(Policy = Acesso.Edicao)]
@@ -76,9 +62,10 @@ public class EmpresasController : Controller
 
     [Authorize(Policy = Acesso.Edicao)]
     [HttpGet]
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(int id, string? cnaeBusca)
     {
         var empresa = await _service.ObterParaEdicaoAsync(id);
+        if (empresa is not null) { ViewBag.Cnaes = await _cnaes.ListarDaEmpresaAsync(id); ViewBag.CatalogoCnaes = await _cnaes.ListarAsync(cnaeBusca); }
         return empresa is null ? NotFound() : View(empresa);
     }
 
@@ -119,5 +106,17 @@ public class EmpresasController : Controller
         await _service.ExcluirAsync(id);
         TempData["Sucesso"] = "Registro removido da lista de ativos.";
         return RedirectToAction(nameof(Index));
+    }
+    [HttpPost, Authorize(Policy = Acesso.Edicao)]
+    public async Task<IActionResult> AssociarCnae(int id, string numero)
+    {
+        await _cnaes.AssociarAsync(id, numero);
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+    [HttpPost, Authorize(Policy = Acesso.Edicao)]
+    public async Task<IActionResult> RemoverCnae(int id, string numero)
+    {
+        await _cnaes.RemoverAsync(id, numero);
+        return RedirectToAction(nameof(Edit), new { id });
     }
 }

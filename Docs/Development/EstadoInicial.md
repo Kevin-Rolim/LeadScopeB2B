@@ -1,7 +1,5 @@
-# Contrato do banco
+# Preservação antes da versão acadêmica
 
-A referência da aplicação é `Docs/Database/LeadScopeB2B.sql`, com os dados de referência em `Docs/Database/InsertCPPA.sql`. As 14 tabelas e suas colunas são utilizadas diretamente nos repositories e models. Não há detecção de versões, aliases de tabelas, renomeação ou alteração automática de estrutura.
+A base foi `branch-kevin`, commit `999a224`. Antes de editar arquivos, foi criada e publicada a branch `archive/integracoes-antes-simplificacao`. Não houve reescrita de histórico. Diagramas locais não rastreados foram preservados.
 
-`Usuarios` não possui status ou versão de sessão. `CnaesEmpresas` não possui indicação de principal. `DadosColetados` não possui estado de aprovação, data, evidência URL ou valor normalizado separado. `Empresas` não possui raiz do CNPJ nem índice filtrado para CNPJ nulo. `FonteDados` usa `DataHoraExclusao` para disponibilidade. A interface e os serviços respeitam essas estruturas.
-
-Os scripts SQL fornecidos pelo operador não são executados durante o uso da aplicação. Testes usam somente um banco temporário independente.
+Os documentos operacionais do motor de integrações e exemplos de provedores estão disponíveis naquela branch histórica. O escopo vigente está no README e em `Docs/Contas.md`.

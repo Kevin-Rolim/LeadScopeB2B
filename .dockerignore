@@ -6,3 +6,6 @@
 **/*.bak
 **/*.bacpac
 App_Data/
+node_modules/
+Design de referencia/
+artifacts/

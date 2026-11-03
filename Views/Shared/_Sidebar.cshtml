@@ -1,0 +1,21 @@
+@{
+    var current = ViewContext.RouteData.Values["controller"]?.ToString();
+    var name = User.Identity?.Name ?? "";
+    var initials = string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(n => n[0])).ToUpperInvariant();
+    var role = User.IsInRole("ADMIN") ? "Administrador" : User.IsInRole("REVISOR") ? "Revisor" : "Usuário";
+    var nav = new[] { ("Home", "Início", "layout-grid"), ("Empresas", "Empresas", "building-2"), ("Pessoas", "Pessoas", "users"), ("Leads", "Leads", "target") };
+}
+<aside id="sidebar" class="app-sidebar" aria-label="Menu principal">
+<div class="sidebar-logo"><partial name="_Logo" model="true" /><button type="button" class="icon-button lg:hidden" data-menu-close aria-label="Fechar menu"><partial name="_Icon" model='"x"' /></button></div>
+<nav class="sidebar-nav"><p class="nav-label">Operação</p>
+@foreach(var item in nav) { <a asp-controller="@item.Item1" asp-action="Index" class="nav-link" aria-current="@(current == item.Item1 ? "page" : null)"><partial name="_Icon" model="item.Item3" />@item.Item2</a> }
+@if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) { <a asp-controller="Importacao" asp-action="Index" class="nav-link" aria-current="@(current == "Importacao" ? "page" : null)"><partial name="_Icon" model='"upload"' />Importar CSV</a> }
+@if(User.IsInRole("ADMIN")) {
+<p class="nav-label">Administração</p>
+<a asp-controller="Usuarios" asp-action="Index" class="nav-link" aria-current="@(current == "Usuarios" ? "page" : null)"><partial name="_Icon" model='"shield-check"' />Usuários</a>
+<a asp-controller="Auditoria" asp-action="Index" class="nav-link" aria-current="@(current == "Auditoria" ? "page" : null)"><partial name="_Icon" model='"history"' />Auditoria</a>
+}
+</nav>
+<div class="sidebar-user"><span class="avatar" aria-hidden="true">@initials</span><a asp-controller="Conta" asp-action="Perfil" class="min-w-0 flex-1" title="Meu perfil"><span class="block truncate font-medium">@name</span><span class="block text-xs text-sidebar-muted">@role · Meu perfil</span></a><form asp-controller="Conta" asp-action="Logout" method="post"><button class="icon-button text-sidebar-muted" title="Sair" aria-label="Sair"><partial name="_Icon" model='"log-out"' /></button></form></div>
+</aside>
+<div class="menu-backdrop" data-menu-close></div>

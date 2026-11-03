@@ -5,7 +5,6 @@ namespace LeadScopeB2B.Repositories;
 public class CnaeRepository(SqlLeadScopeB2B sql)
 {
     public Task<List<Cnaes>> ListarAsync(string? busca = null) => sql.ConsultarAsync("SELECT TOP (200) Numero,Descricao FROM dbo.Cnaes WHERE @busca IS NULL OR CHARINDEX(@busca,Numero)>0 OR CHARINDEX(@busca,Descricao)>0 ORDER BY Numero", r => new Cnaes { Numero = r.Text("Numero")!, Descricao = r.Text("Descricao")! }, Text("@busca", busca, 200));
-    public Task AdicionarAsync(Cnaes model) => sql.ExecutarAsync("INSERT INTO dbo.Cnaes (Numero,Descricao) VALUES (@numero,@descricao)", Text("@numero", model.Numero, 20), Text("@descricao", model.Descricao, 255));
     public Task<List<CnaesEmpresas>> ListarDaEmpresaAsync(int empresaId) => sql.ConsultarAsync("SELECT c.Numero,c.Descricao FROM dbo.CnaesEmpresas ce JOIN dbo.Cnaes c ON c.Numero=ce.CnaeNumero WHERE ce.EmpresaId=@id ORDER BY c.Numero", r => new CnaesEmpresas { EmpresaId = empresaId, CnaeNumero = r.Text("Numero")!, Cnaes = new Cnaes { Numero = r.Text("Numero")!, Descricao = r.Text("Descricao")! } }, Int("@id", empresaId));
     public async Task AssociarAsync(int empresaId, string numero)
     {

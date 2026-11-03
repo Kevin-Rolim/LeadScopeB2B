@@ -124,7 +124,7 @@ public class LeadService
         lead.Cargo = Limpar(model.Cargo);
         lead.Departamento = Limpar(model.Departamento);
         lead.Senioridade = Limpar(model.Senioridade);
-        lead.StatusVinculo = CadastroRules.Estado(model.StatusVinculo ?? "INCERTO", "INCERTO", "ATIVO", "INATIVO");
+        lead.StatusVinculo = "INCERTO";
         lead.StatusLead = CadastroRules.Estado(model.StatusLead ?? "NOVO", "NOVO", "EM_ANALISE");
         lead.NivelConfianca = model.NivelConfianca;
         lead.FonteVinculo = Limpar(model.FonteVinculo);

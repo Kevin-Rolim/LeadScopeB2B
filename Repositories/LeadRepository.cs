@@ -71,8 +71,10 @@ public class LeadRepository(SqlLeadScopeB2B sql, IPessoaRepository pessoas, IEmp
     {
         await sql.TransacaoAsync(async (conn, tx) =>
         {
+            var autorizado = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT u.Id FROM dbo.Usuarios u WITH (UPDLOCK,HOLDLOCK) JOIN dbo.PerfisAcesso p ON p.Id=u.PerfilAcessoId JOIN dbo.ConjuntoPermissoes c ON c.Id=p.ConjuntoPermissoesId WHERE u.Id=@id AND c.Nome IN (N'Administrador',N'Revisor')", r => r.GetInt32(0), Int("@id", usuarioId));
+            if (autorizado.Count == 0) throw new UnauthorizedAccessException("Revisão não autorizada.");
             await ValidarDestinosAsync(conn, tx, pessoaId, empresaId);
-            if (await SqlLeadScopeB2B.ExecutarAsync(conn, tx, "UPDATE dbo.PessoasEmpresas SET StatusLead=@decisao,DataRevisao=SYSUTCDATETIME(),DataVerificacao=SYSUTCDATETIME() WHERE PessoaId=@pessoa AND EmpresaId=@empresa AND ISNULL(StatusLead,'')<>'REMOVIDO'", Int("@pessoa", pessoaId), Int("@empresa", empresaId), Text("@decisao", decisao, 50)) == 0) throw new KeyNotFoundException("Lead não encontrado.");
+            if (await SqlLeadScopeB2B.ExecutarAsync(conn, tx, "UPDATE dbo.PessoasEmpresas SET StatusLead=@decisao,StatusVinculo=CASE @decisao WHEN 'QUALIFICADO' THEN 'ATIVO' WHEN 'REJEITADO' THEN 'INATIVO' ELSE 'INCERTO' END,DataRevisao=SYSUTCDATETIME(),DataVerificacao=SYSUTCDATETIME() WHERE PessoaId=@pessoa AND EmpresaId=@empresa AND ISNULL(StatusLead,'')<>'REMOVIDO'", Int("@pessoa", pessoaId), Int("@empresa", empresaId), Text("@decisao", decisao, 50)) == 0) throw new KeyNotFoundException("Lead não encontrado.");
             await SqlLeadScopeB2B.ExecutarAsync(conn, tx, "INSERT INTO dbo.Revisoes (Decisao,Comentario,UsuarioId,PessoaId,EmpresaId) VALUES (@decisao,@comentario,@usuario,@pessoa,@empresa)", Text("@decisao", decisao, 100), Text("@comentario", comentario), Int("@usuario", usuarioId), Int("@pessoa", pessoaId), Int("@empresa", empresaId));
             await AuditoriaRepository.RegistrarAsync(conn, tx, usuarioId, "REVISAO_LEAD", $"Lead {pessoaId}/{empresaId}: {decisao}");
             return true;

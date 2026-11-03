@@ -11,7 +11,7 @@ internal static class Erros
 {
     public static (int Status, string Mensagem) Classificar(Exception ex) => ex switch
     {
-        LeadScopeB2B.Integration.Universal.IntegracaoException => (400, ex.Message),
+        UnauthorizedAccessException => (403, "Acesso não permitido."),
         ValidationException => (400, ex.Message),
         KeyNotFoundException => (404, ex.Message),
         ConflitoException => (409, ex.Message),
@@ -28,20 +28,13 @@ public class ErroHandler(ILogger<ErroHandler> logger) : IExceptionHandler
     {
         var (status, message) = Erros.Classificar(exception);
         if (status >= 500) logger.LogError(exception, "Falha na requisição {TraceId}", context.TraceIdentifier);
-        context.Response.StatusCode = status;
-        if (context.Request.Path.StartsWithSegments("/api"))
-            await Results.Problem(statusCode: status, title: message, extensions: new Dictionary<string, object?> { { "traceId", context.TraceIdentifier } }).ExecuteAsync(context);
-        else
-        {
-            context.Response.ContentType = "text/html; charset=utf-8";
-            await context.Response.WriteAsync($"<!doctype html><html lang='pt-BR'><meta charset='utf-8'><title>LeadScopeB2B</title><h1>{System.Net.WebUtility.HtmlEncode(message)}</h1><p>Referência: {System.Net.WebUtility.HtmlEncode(context.TraceIdentifier)}</p><a href='/'>Voltar ao início</a></html>", ct);
-        }
+        await StatusPage.RenderAsync(context, status, message);
         return true;
     }
 }
 
 // Erros esperados de cadastro retornam ao formulário com as opções de seleção restauradas.
-public class ErroFormularioFilter(LeadService leads, UsuarioService usuarios) : IAsyncActionFilter
+public class ErroFormularioFilter(LeadService leads, UsuarioService usuarios, CnaeService cnaes) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
@@ -60,6 +53,7 @@ public class ErroFormularioFilter(LeadService leads, UsuarioService usuarios) : 
             executed.ExceptionHandled = true;
             return;
         }
+        if (model is EmpresaFormViewModel empresa && empresa.Id > 0) { controller.ViewBag.Cnaes = await cnaes.ListarDaEmpresaAsync(empresa.Id); controller.ViewBag.CatalogoCnaes = await cnaes.ListarAsync(); }
         if (model is LeadFormViewModel lead) await leads.PrepararFormularioAsync(lead);
         if (model is UsuarioCreateViewModel create) await usuarios.PrepararFormularioAsync(create);
         if (model is UsuarioEditViewModel edit) await usuarios.PrepararFormularioAsync(edit);

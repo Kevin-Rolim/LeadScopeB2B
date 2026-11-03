@@ -1,0 +1,17 @@
+{
+  "name": "leadscopeb2b-ui",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i Frontend/site.css -o wwwroot/css/site.css --minify",
+    "assets": "node scripts/copy-assets.mjs",
+    "build": "npm run assets && npm run build:css"
+  },
+  "devDependencies": {
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@playwright/test": "1.64.1",
+    "@tailwindcss/cli": "4.2.1",
+    "lucide-static": "1.67.0",
+    "tailwindcss": "4.2.1"
+  }
+}

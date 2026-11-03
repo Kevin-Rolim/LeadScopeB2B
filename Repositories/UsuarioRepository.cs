@@ -29,9 +29,9 @@ public class UsuarioRepository(SqlLeadScopeB2B sql) : IUsuarioRepository
     {
         await sql.TransacaoAsync(async (conn, tx) =>
         {
-            var admins = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, Select.Replace("dbo.Usuarios u", "dbo.Usuarios u WITH (UPDLOCK,HOLDLOCK)") + " WHERE c.Nome='Admin'", Mapear);
+            var admins = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, Select.Replace("dbo.Usuarios u", "dbo.Usuarios u WITH (UPDLOCK,HOLDLOCK)") + " WHERE c.Nome='Administrador'", Mapear);
             var perfil = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT c.Nome FROM dbo.PerfisAcesso p JOIN dbo.ConjuntoPermissoes c ON c.Id=p.ConjuntoPermissoesId WHERE p.Id=@id", r => r.GetString(0), Int("@id", usuario.PerfilAcessoId));
-            if (admins.Count == 1 && admins[0].Id == usuario.Id && !perfil.Contains("Admin")) throw new ConflitoException("O último administrador deve ser preservado.");
+            if (admins.Count == 1 && admins[0].Id == usuario.Id && !perfil.Contains("Administrador")) throw new ConflitoException("O último administrador deve ser preservado.");
             if (await SqlLeadScopeB2B.ExecutarAsync(conn, tx, "UPDATE dbo.Usuarios SET Nome=@nome,Email=@email,SenhaHash=@senha,PerfilAcessoId=@perfil WHERE Id=@id", Parametros(usuario)) == 0) throw new KeyNotFoundException("Usuário não encontrado.");
             return true;
         });
@@ -42,11 +42,11 @@ public class UsuarioRepository(SqlLeadScopeB2B sql) : IUsuarioRepository
         {
             var duplicados = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT Id FROM dbo.Usuarios WITH (UPDLOCK,HOLDLOCK) WHERE LOWER(LTRIM(RTRIM(Email)))=@email", r => r.GetInt32(0), Text("@email", usuario.Email, 150));
             if (duplicados.Count > 0) throw new ConflitoException("Não foi possível criar a conta com estes dados. Se já possui cadastro, entre ou recupere seu acesso.");
-            var perfis = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT TOP (1) p.Id FROM dbo.PerfisAcesso p JOIN dbo.ConjuntoPermissoes c ON c.Id=p.ConjuntoPermissoesId WHERE c.Nome='Leitura' ORDER BY p.Id", r => r.GetInt32(0));
+            var perfis = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT TOP (1) p.Id FROM dbo.PerfisAcesso p JOIN dbo.ConjuntoPermissoes c ON c.Id=p.ConjuntoPermissoesId WHERE c.Nome='Usuário' ORDER BY p.Id", r => r.GetInt32(0));
             if (perfis.Count == 0) throw new ConflitoException("O cadastro está indisponível. Entre em contato com o administrador.");
             usuario.PerfilAcessoId = perfis[0];
             usuario.Id = (await SqlLeadScopeB2B.ConsultarAsync(conn, tx, Insert, r => r.GetInt32(0), Parametros(usuario))).Single();
-            await AuditoriaRepository.RegistrarAsync(conn, tx, usuario.Id, "CADASTRO_PUBLICO", "Conta de leitura criada pelo cadastro público.");
+            await AuditoriaRepository.RegistrarAsync(conn, tx, usuario.Id, "CADASTRO_PUBLICO", "Conta de usuário criada pelo cadastro público.");
             return true;
         });
     }
@@ -77,11 +77,11 @@ public class UsuarioRepository(SqlLeadScopeB2B sql) : IUsuarioRepository
         await sql.TransacaoAsync(async (conn, tx) =>
         {
             _ = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT Id FROM dbo.Usuarios WITH (TABLOCKX,HOLDLOCK)", r => r.GetInt32(0));
-            var admins = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, Select + " WHERE c.Nome='Admin'", Mapear);
+            var admins = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, Select + " WHERE c.Nome='Administrador'", Mapear);
             if (admins.Count > 0) throw new ConflitoException("Já existe um administrador cadastrado. Use a administração de usuários.");
-            var profiles = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT p.Id FROM dbo.PerfisAcesso p JOIN dbo.ConjuntoPermissoes c ON c.Id=p.ConjuntoPermissoesId WHERE c.Nome='Admin' ORDER BY p.Id", r => r.GetInt32(0));
+            var profiles = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "SELECT p.Id FROM dbo.PerfisAcesso p JOIN dbo.ConjuntoPermissoes c ON c.Id=p.ConjuntoPermissoesId WHERE c.Nome='Administrador' ORDER BY p.Id", r => r.GetInt32(0));
             usuario.PerfilAcessoId = profiles.FirstOrDefault();
-            if (usuario.PerfilAcessoId == 0) throw new ConflitoException("O banco não possui perfil associado ao conjunto Admin.");
+            if (usuario.PerfilAcessoId == 0) throw new ConflitoException("O banco não possui perfil associado ao conjunto Administrador.");
             usuario.Id = (await SqlLeadScopeB2B.ConsultarAsync(conn, tx, Insert, r => r.GetInt32(0), Parametros(usuario))).Single();
             return true;
         });

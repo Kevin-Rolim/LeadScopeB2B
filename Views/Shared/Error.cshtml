@@ -1,6 +1,6 @@
 @model ErrorViewModel
 @{ ViewData["Title"] = "Falha na operação"; }
-<h1 class="h3">Não foi possível concluir a operação</h1>
+<h1 class="page-title">Não foi possível concluir a operação</h1>
 <p>Tente novamente. Se o problema persistir, informe a referência abaixo ao administrador.</p>
 @if(Model.ShowRequestId) { <p>Referência: <code>@Model.RequestId</code></p> }
 <a asp-controller="Home" asp-action="Index">Voltar ao início</a>
