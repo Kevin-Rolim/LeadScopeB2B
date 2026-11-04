@@ -4,7 +4,7 @@ Aplicação ASP.NET Core MVC (.NET 10), com SQL Server e ADO.NET puro. Organiza 
 
 ## Execução
 
-1. Instale o SDK .NET 10 e disponibilize SQL Server 2022.
+1. Para executar **sem Docker**, instale o SDK .NET 10 e disponibilize SQL Server 2022. Para executar **com Docker**, basta Docker Engine/Desktop com Compose v2; siga a seção abaixo.
 2. Em uma base nova, execute `Data/LeadScopeB2B.sql`. As definições das 14 tabelas correspondem a `Docs/Database/LeadScopeB2B.sql`. `Docs/Database/InsertCPPA.sql` contém apenas referências de perfis.
 3. Em uma base anterior, execute **somente** `Data/AdequarPerfis.sql` antes de usar esta versão. O script renomeia os conjuntos Admin → Administrador, Gestor → Revisor e Leitura → Usuário, preservando IDs e relacionamentos. Revise a atribuição dos usuários: o antigo Gestor passa a revisar e o antigo Leitura passa a cadastrar.
 4. Configure `ConnectionStrings:DefaultConnection` por user secrets ou `ConnectionStrings__DefaultConnection` no ambiente. Não versione credenciais.
@@ -32,9 +32,27 @@ Use **Importar CSV**, também acessível nas listas de empresas e pessoas. Arqui
 
 Duplicidades usam CNPJ para empresas e e-mail/LinkedIn para pessoas, inclusive cadastros removidos. Pessoas importadas registram `Origem=Importação CSV`; não é necessário cadastrar fontes. A exportação está na lista de leads, para até 200 selecionados qualificados, com vínculo ativo, pessoa validada e desbloqueada e empresa validada, com registro de auditoria e proteção de células contra fórmulas.
 
-## Docker e recuperação de acesso
+## Docker — instalação nova em Windows ou Linux
 
-Defina `MSSQL_SA_PASSWORD` no `.env` privado e execute `docker compose up -d --build`. Inicialize o banco conforme acima. Aplicação: `http://localhost:18080`; SQL: `localhost,14331`. Volumes de banco e chaves são mantidos. O volume histórico `integracoes_data` permanece declarado, sem montagem ou uso pela aplicação, para preservar instalações anteriores. Não execute `down -v` se quiser preservar dados.
+Requisitos: Docker Engine/Desktop com **Compose v2**, CPU `x86_64/amd64`, memória suficiente (o SQL Server precisa de ao menos **2 GB apenas para ele**, além da aplicação) e espaço em disco. Não é necessário instalar SQL Server ou .NET no computador anfitrião. O SQL Server é a edição Developer, destinada a desenvolvimento/testes.
+
+1. Copie `.env.example` para `.env` (`cp .env.example .env` no Linux/macOS ou `Copy-Item .env.example .env` no PowerShell).
+2. Edite **as duas senhas**, o e-mail e o nome do administrador. Use senhas fortes, diferentes e privadas. `.env` está no `.gitignore`. Não use ponto e vírgula nem aspas na senha do SQL, pois ela é incorporada à connection string ADO.NET. Se o SQL Server já existir em volume, mantenha a senha `sa` correspondente.
+3. Execute `docker compose up -d --build`.
+4. Acesse **http://localhost:18080**. SQL Server (opcional para ferramentas externas): **localhost,14331**. As portas estão ligadas a `127.0.0.1`; personalize `LEADSCOPE_HTTP_PORT` e `LEADSCOPE_SQL_PORT` no `.env` se estiverem ocupadas.
+
+O Compose aguarda o SQL Server ficar saudável, executa `sql-init` (cria o banco e as 14 tabelas apenas se ainda não existirem), valida os tipos/colunas, as restrições e os perfis, e então executa `admin-init`. **A primeira conta administrativa só é criada se `Usuarios` estiver vazia**; bases que já têm usuários não recebem senhas ou contas novas. Por fim a aplicação inicia. Se houver incompatibilidade de banco, o processo falha com mensagem de erro **sem apagar dados**. Instalações legadas com perfis antigos podem exigir aplicar manualmente `Data/AdequarPerfis.sql` **após backup e revisão**.
+
+Para conferir os serviços e logs:
+
+```sh
+docker compose ps -a
+docker compose logs --tail=150 sqlserver sql-init admin-init leadscope
+```
+
+O serviço `sql-init` e o `admin-init` aparecerem como `Exited (0)` depois do sucesso é **normal**: são tarefas de inicialização, não servidores permanentes. Não execute `docker compose down -v` caso deseje preservar o banco, os usuários e as chaves de sessão. `docker compose down` sem `-v` preserva volumes. O volume histórico `integracoes_data` continua declarado sem montagem para não afetar instalações anteriores.
+
+Em banco antigo **com usuários**, se não houver administrador, o inicializador **não promove ninguém automaticamente**; use um procedimento administrativo autorizado. Se os containers falharem, confira memória disponível, portas locais, senha do volume e os logs do serviço específico. O healthcheck verifica conectividade, e a validação do esquema não substitui testes funcionais.
 
 A recuperação de acesso é opcional e usa SMTP, independente das integrações de dados removidas. Configure `RecuperacaoAcesso:Habilitado`, `RecuperacaoAcesso:UrlPublica` e `EmailSmtp` no ambiente. Sem SMTP, login, cadastro e administração continuam disponíveis. Consulte [Contas](Docs/Contas.md).
 

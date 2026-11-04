@@ -12,7 +12,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
-var builder = WebApplication.CreateBuilder(args.Where(arg => arg != "--criar-admin").ToArray());
+var inicializarAdmin = args.Contains("--inicializar-admin");
+var criarAdmin = args.Contains("--criar-admin");
+var builder = WebApplication.CreateBuilder(args.Where(arg => arg != "--criar-admin" && arg != "--inicializar-admin").ToArray());
 builder.Services.AddControllersWithViews(options =>
 {
     options.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(field => $"O campo {field} deve ser um número.");
@@ -84,8 +86,29 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+// O Compose usa um comando de inicialização não destrutivo: só cria o admin em banco sem usuários.
+if (inicializarAdmin)
+{
+    using var scope = app.Services.CreateScope();
+    var usuarios = await scope.ServiceProvider.GetRequiredService<IUsuarioRepository>().ListarAsync();
+    if (usuarios.Count == 0)
+    {
+        var nome = Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_NOME");
+        var email = Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_EMAIL");
+        var senha = Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_SENHA");
+        if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(senha))
+            throw new InvalidOperationException("Primeira instalação: configure LEADSCOPE_ADMIN_NOME, LEADSCOPE_ADMIN_EMAIL e LEADSCOPE_ADMIN_SENHA no arquivo .env.");
+        await scope.ServiceProvider.GetRequiredService<UsuarioService>().CriarAdministradorInicialAsync(nome, email, senha);
+        Console.WriteLine("Administrador inicial criado. Altere as credenciais antes de disponibilizar o sistema.");
+    }
+    else
+    {
+        Console.WriteLine("Inicialização administrativa ignorada: já existem usuários. Nenhuma conta ou senha foi alterada.");
+    }
+    return;
+}
 // Somente o comando local pode criar o primeiro administrador; cadastro público sempre usa Usuário.
-if (args.Contains("--criar-admin"))
+if (criarAdmin)
 {
     using var scope = app.Services.CreateScope();
     await scope.ServiceProvider.GetRequiredService<UsuarioService>().CriarAdministradorInicialAsync(

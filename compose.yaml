@@ -1,5 +1,8 @@
-
 name: leadscopeb2b
+
+x-app-build: &app-build
+  context: .
+  dockerfile: dockerfile
 
 services:
   sqlserver:
@@ -7,37 +10,68 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: Developer
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Defina a senha no .env}
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Defina MSSQL_SA_PASSWORD no .env}"
     ports:
-      - "127.0.0.1:14331:1433"
+      - "127.0.0.1:${LEADSCOPE_SQL_PORT:-14331}:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+    restart: unless-stopped
     healthcheck:
       test:
         - CMD-SHELL
-        - 'SQLCMDPASSWORD="$$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -Q "SELECT 1" -b -o /dev/null'
+        - 'SQLCMDPASSWORD="$$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q "SELECT 1" -o /dev/null'
       interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 40s
+      timeout: 8s
+      retries: 18
+      start_period: 60s
+
+  sql-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    entrypoint: ["/bin/bash", "/bootstrap/init-db.sh"]
+    environment:
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Defina MSSQL_SA_PASSWORD no .env}"
+    volumes:
+      - ./scripts/init-db.sh:/bootstrap/init-db.sh:ro
+      - ./Data/LeadScopeB2B.sql:/bootstrap/LeadScopeB2B.sql:ro
+      - ./Data/ValidarInstalacao.sql:/bootstrap/ValidarInstalacao.sql:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+
+  admin-init:
+    build: *app-build
+    image: leadscopeb2b:local
+    entrypoint: ["dotnet", "LeadScopeB2B.dll", "--inicializar-admin"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=LeadScopeB2B;User Id=sa;Password=${MSSQL_SA_PASSWORD:?Defina MSSQL_SA_PASSWORD no .env};Encrypt=True;TrustServerCertificate=True"
+      LEADSCOPE_ADMIN_NOME: "${LEADSCOPE_ADMIN_NOME:-}"
+      LEADSCOPE_ADMIN_EMAIL: "${LEADSCOPE_ADMIN_EMAIL:-}"
+      LEADSCOPE_ADMIN_SENHA: "${LEADSCOPE_ADMIN_SENHA:-}"
+    depends_on:
+      sql-init:
+        condition: service_completed_successfully
+    restart: "no"
 
   leadscope:
-    build:
-      context: .
-      dockerfile: dockerfile
+    build: *app-build
     image: leadscopeb2b:local
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=LeadScopeB2B;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=LeadScopeB2B;User Id=sa;Password=${MSSQL_SA_PASSWORD:?Defina MSSQL_SA_PASSWORD no .env};Encrypt=True;TrustServerCertificate=True"
       DataProtection__DiretorioChaves: /app/keys
     ports:
-      - "127.0.0.1:18080:8080"
+      - "127.0.0.1:${LEADSCOPE_HTTP_PORT:-18080}:8080"
     volumes:
       - dataprotection_keys:/app/keys
     depends_on:
       sqlserver:
         condition: service_healthy
+      admin-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
 volumes:
   sqlserver_data:
