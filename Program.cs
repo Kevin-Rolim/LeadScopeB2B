@@ -11,8 +11,21 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args.Where(arg => arg != "--criar-admin").ToArray());
+builder.Services.AddAntiforgery(options =>
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always);
+// Somente os proxies explicitamente configurados podem informar o protocolo original.
+// O acesso direto continua sem confiar em X-Forwarded-* enviados por clientes.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    foreach (var proxy in builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [])
+        options.KnownProxies.Add(IPAddress.Parse(proxy));
+});
 builder.Services.AddControllersWithViews(options =>
 {
     options.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(field => $"O campo {field} deve ser um número.");
@@ -40,7 +53,16 @@ builder.Services.AddScoped<LeadService>();
 builder.Services.AddScoped<ContaService>();
 builder.Services.Configure<EmailSmtpOptions>(builder.Configuration.GetSection("EmailSmtp"));
 builder.Services.Configure<RecuperacaoAcessoOptions>(builder.Configuration.GetSection("RecuperacaoAcesso"));
-builder.Services.AddScoped<IRecuperacaoEmail, SmtpRecuperacaoEmail>();
+builder.Services.Configure<EmailResendOptions>(builder.Configuration.GetSection("EmailResend"));
+builder.Services.AddScoped<SmtpRecuperacaoEmail>();
+builder.Services.AddHttpClient<ResendRecuperacaoEmail>(client => client.Timeout = TimeSpan.FromSeconds(20));
+builder.Services.AddScoped<IRecuperacaoEmail>(services =>
+    builder.Configuration["RecuperacaoAcesso:Provedor"]?.ToLowerInvariant() switch
+    {
+        null or "smtp" => services.GetRequiredService<SmtpRecuperacaoEmail>(),
+        "resend" => services.GetRequiredService<ResendRecuperacaoEmail>(),
+        _ => throw new InvalidOperationException("RecuperacaoAcesso:Provedor deve ser Smtp ou Resend.")
+    });
 builder.Services.AddSingleton<RecuperacaoToken>();
 builder.Services.AddSingleton<SolicitacoesRecuperacao>();
 builder.Services.AddScoped<RecuperacaoAcessoService>();
@@ -95,6 +117,7 @@ if (args.Contains("--criar-admin"))
     Console.WriteLine("Administrador inicial criado.");
     return;
 }
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages(context => StatusPage.RenderAsync(context.HttpContext, context.HttpContext.Response.StatusCode));
 if (!app.Environment.IsDevelopment()) { app.UseHsts(); app.UseHttpsRedirection(); }

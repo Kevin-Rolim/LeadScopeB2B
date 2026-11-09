@@ -34,9 +34,11 @@ Duplicidades usam CNPJ para empresas e e-mail/LinkedIn para pessoas, inclusive c
 
 ## Docker e recuperação de acesso
 
+Para a implantação privada no Coolify com login por e-mail no Cloudflare Access, consulte [Deploy no Coolify](Docs/DeployCoolify.md). A composição de produção é independente da composição local abaixo.
+
 Defina `MSSQL_SA_PASSWORD` no `.env` privado e execute `docker compose up -d --build`. Inicialize o banco conforme acima. Aplicação: `http://localhost:18080`; SQL: `localhost,14331`. Volumes de banco e chaves são mantidos. O volume histórico `integracoes_data` permanece declarado, sem montagem ou uso pela aplicação, para preservar instalações anteriores. Não execute `down -v` se quiser preservar dados.
 
-A recuperação de acesso é opcional e usa SMTP, independente das integrações de dados removidas. Configure `RecuperacaoAcesso:Habilitado`, `RecuperacaoAcesso:UrlPublica` e `EmailSmtp` no ambiente. Sem SMTP, login, cadastro e administração continuam disponíveis. Consulte [Contas](Docs/Contas.md).
+A recuperação de acesso é opcional e usa SMTP ou a API do Resend, independente das integrações de dados removidas. Configure `RecuperacaoAcesso:Habilitado`, `RecuperacaoAcesso:UrlPublica` e `EmailSmtp` no ambiente. Sem provedor de e-mail configurado, login, cadastro e administração continuam disponíveis. Consulte [Contas](Docs/Contas.md).
 
 ## Validação
 

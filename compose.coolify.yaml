@@ -1,0 +1,90 @@
+# Stack independente no Coolify. Não combinar com compose.yaml.
+# Reutiliza os dados existentes somente após backup e com os containers antigos parados.
+# A imagem é compilada de dockerfile.coolify no próprio servidor antes de implantar.
+services:
+  sqlserver:
+    image: ${LEADSCOPE_SQL_IMAGE:?Defina o digest da imagem SQL existente}
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Configure no Coolify}
+      MSSQL_MEMORY_LIMIT_MB: "2048"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - database
+    labels:
+      traefik.enable: "false"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'SQLCMDPASSWORD="$$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -Q "SELECT 1" -b -o /dev/null'
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    mem_limit: 3g
+
+  leadscope:
+    image: ${LEADSCOPE_IMAGE:?Defina a imagem compilada no servidor}
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      AllowedHosts: leadscopeb2b.trinyx.com.br;localhost
+      ReverseProxy__KnownProxies__0: 172.30.71.1
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=LeadScopeB2B;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
+      DataProtection__DiretorioChaves: /app/keys
+      RecuperacaoAcesso__Habilitado: ${RECUPERACAO_HABILITADO:-false}
+      RecuperacaoAcesso__Provedor: ${RECUPERACAO_PROVEDOR:-Smtp}
+      RecuperacaoAcesso__UrlPublica: https://leadscopeb2b.trinyx.com.br
+      EmailResend__TemplateId: ${RESEND_TEMPLATE_ID:-}
+      EmailResend__VariavelLink: ${RESEND_VARIAVEL_LINK:-RESET_URL}
+      EmailResend__ApiKey: ${RESEND_API_KEY:-}
+      EmailResend__Remetente: ${RESEND_REMETENTE:-}
+      EmailSmtp__Host: ${SMTP_HOST:-}
+      EmailSmtp__Porta: ${SMTP_PORTA:-587}
+      EmailSmtp__Remetente: ${SMTP_REMETENTE:-}
+      EmailSmtp__Usuario: ${SMTP_USUARIO:-}
+      EmailSmtp__Senha: ${SMTP_SENHA:-}
+      EmailSmtp__UsarTls: "true"
+    ports:
+      - "127.0.0.1:18080:8080"
+    volumes:
+      - dataprotection_keys:/app/keys
+    networks:
+      edge:
+        gw_priority: 1
+      database: {}
+    labels:
+      traefik.enable: "false"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+networks:
+  edge:
+    ipam:
+      config:
+        - subnet: 172.30.71.0/29
+          gateway: 172.30.71.1
+  database:
+    internal: true
+
+volumes:
+  sqlserver_data:
+    external: true
+    name: leadscopeb2b_sqlserver_data
+  dataprotection_keys:
+    external: true
+    name: leadscopeb2b_dataprotection_keys

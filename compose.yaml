@@ -31,6 +31,19 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=LeadScopeB2B;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
       DataProtection__DiretorioChaves: /app/keys
+      RecuperacaoAcesso__Habilitado: ${RECUPERACAO_HABILITADO:-false}
+      RecuperacaoAcesso__Provedor: ${RECUPERACAO_PROVEDOR:-Smtp}
+      RecuperacaoAcesso__UrlPublica: ${RECUPERACAO_URL_PUBLICA:-http://localhost:18080}
+      EmailResend__ApiKey: ${RESEND_API_KEY:-}
+      EmailResend__Remetente: ${RESEND_REMETENTE:-}
+      EmailResend__TemplateId: ${RESEND_TEMPLATE_ID:-}
+      EmailResend__VariavelLink: ${RESEND_VARIAVEL_LINK:-RESET_URL}
+      EmailSmtp__Host: ${SMTP_HOST:-}
+      EmailSmtp__Porta: ${SMTP_PORTA:-587}
+      EmailSmtp__Remetente: ${SMTP_REMETENTE:-}
+      EmailSmtp__Usuario: ${SMTP_USUARIO:-}
+      EmailSmtp__Senha: ${SMTP_SENHA:-}
+      EmailSmtp__UsarTls: ${SMTP_USAR_TLS:-true}
     ports:
       - "127.0.0.1:18080:8080"
     volumes:

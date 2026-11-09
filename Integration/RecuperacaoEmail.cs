@@ -1,4 +1,6 @@
 using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Net.Mail;
 using System.Text;
 using Microsoft.Extensions.Options;
@@ -18,7 +20,7 @@ public class EmailSmtpOptions
 public interface IRecuperacaoEmail
 {
     bool Configurado { get; }
-    Task EnviarAsync(string email, string link, CancellationToken cancellationToken);
+    Task EnviarAsync(string email, string link, string nome, CancellationToken cancellationToken);
 }
 
 public class SmtpRecuperacaoEmail(IOptionsMonitor<EmailSmtpOptions> options, IWebHostEnvironment environment) : IRecuperacaoEmail
@@ -35,7 +37,7 @@ public class SmtpRecuperacaoEmail(IOptionsMonitor<EmailSmtpOptions> options, IWe
         }
     }
 
-    public async Task EnviarAsync(string email, string link, CancellationToken cancellationToken)
+    public async Task EnviarAsync(string email, string link, string nome, CancellationToken cancellationToken)
     {
         if (!Configurado) throw new InvalidOperationException("SMTP não configurado para recuperação de acesso.");
         var o = options.CurrentValue;
@@ -56,5 +58,50 @@ public class SmtpRecuperacaoEmail(IOptionsMonitor<EmailSmtpOptions> options, IWe
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(20));
         await client.SendMailAsync(message, timeout.Token);
+    }
+}
+
+public class EmailResendOptions
+{
+    public string ApiKey { get; set; } = "";
+    public string TemplateId { get; set; } = "";
+    public string VariavelLink { get; set; } = "RESET_URL";
+    public string Remetente { get; set; } = "";
+}
+
+public class ResendRecuperacaoEmail(HttpClient client, IOptionsMonitor<EmailResendOptions> options) : IRecuperacaoEmail
+{
+    public bool Configurado => !string.IsNullOrWhiteSpace(options.CurrentValue.ApiKey)
+        && MailAddress.TryCreate(options.CurrentValue.Remetente, out _);
+
+    public async Task EnviarAsync(string email, string link, string nome, CancellationToken cancellationToken)
+    {
+        if (!Configurado) throw new InvalidOperationException("Resend não configurado para recuperação de acesso.");
+        var o = options.CurrentValue;
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", o.ApiKey);
+        var payload = new Dictionary<string, object>
+        {
+            ["from"] = o.Remetente,
+            ["to"] = new[] { email }
+        };
+        if (!string.IsNullOrWhiteSpace(o.TemplateId))
+        {
+            if (string.IsNullOrWhiteSpace(o.VariavelLink))
+                throw new InvalidOperationException("Configure a variável do link no template Resend.");
+            payload["template"] = new
+            {
+                id = o.TemplateId,
+                variables = new Dictionary<string, string> { ["username"] = nome, [o.VariavelLink] = link }
+            };
+        }
+        else
+        {
+            payload["subject"] = "Recuperar acesso ao LeadScopeB2B";
+            payload["text"] = $"Use o link abaixo para definir uma nova senha. Ele expira em uma hora e só pode ser usado uma vez.\r\n\r\n{link}\r\n\r\nSe você não solicitou a recuperação, ignore esta mensagem.";
+        }
+        request.Content = JsonContent.Create(payload);
+        using var response = await client.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
     }
 }

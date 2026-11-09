@@ -10,6 +10,7 @@ namespace LeadScopeB2B.Services;
 public class RecuperacaoAcessoOptions
 {
     public bool Habilitado { get; set; }
+    public string Provedor { get; set; } = "Smtp";
     public string UrlPublica { get; set; } = "";
 }
 
@@ -42,8 +43,8 @@ public class RecuperacaoAcessoService(IUsuarioRepository usuarios, IPasswordHash
         var usuario = await usuarios.ObterPorEmailAsync(endereco);
         if (usuario is null || Acesso.Papel(usuario) is null) return;
         var link = UrlPublica()!.AbsoluteUri.TrimEnd('/') + "/Conta/RedefinirSenha?token=" + Uri.EscapeDataString(tokens.Criar(usuario));
-        await email.EnviarAsync(usuario.Email, link, ct);
-        await auditoria.RegistrarAsync(usuario.Id, "RECUPERACAO_EMAIL", "SMTP aceitou a mensagem de recuperação de acesso.");
+        await email.EnviarAsync(usuario.Email, link, usuario.Nome, ct);
+        await auditoria.RegistrarAsync(usuario.Id, "RECUPERACAO_EMAIL", "O provedor de e-mail aceitou a mensagem de recuperação de acesso.");
     }
 
     private async Task<Usuarios?> ObterUsuarioAsync(string token)

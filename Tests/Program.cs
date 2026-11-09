@@ -15,6 +15,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
 var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../"));
+if (args.Contains("--email")) { await ResendEmailTests.Executar(); return; }
 SchemaContractTests.Executar(root);
 if (args.Contains("--contrato")) return;
 var config = new ConfigurationBuilder().SetBasePath(root).AddJsonFile("appsettings.json").AddUserSecrets<SqlLeadScopeB2B>(true).AddEnvironmentVariables().Build();

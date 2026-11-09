@@ -3,6 +3,13 @@
 **/bin/
 **/obj/
 .env
+.env.*
+.aws/
+.codex/
+.agents/
+.ssh/
+**/*.pem
+**/*.key
 **/*.bak
 **/*.bacpac
 App_Data/
