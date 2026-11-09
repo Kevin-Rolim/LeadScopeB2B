@@ -486,3 +486,5 @@ $RECYCLE.BIN/
 
 # Configurações operacionais e segredos privados de integrações
 App_Data/
+.env
+.env.*

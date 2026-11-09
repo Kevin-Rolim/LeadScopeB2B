@@ -4,6 +4,22 @@ Aplicação ASP.NET Core MVC (.NET 10), com SQL Server e ADO.NET puro. Organiza 
 
 ## Execução
 
+### Início rápido com Docker (Linux ou WSL)
+
+Com Git e Docker com Docker Compose instalados e o Docker em execução:
+
+```bash
+git clone https://github.com/Kevin-Rolim/LeadScopeB2B.git
+cd LeadScopeB2B
+bash iniciar.sh
+```
+
+O script gera a senha local do SQL Server no `.env`, inicia o banco, cria as tabelas em uma base vazia e compila a aplicação. Na primeira execução, pede nome, e-mail e senha para criar o administrador. Abra **http://localhost:18080** e entre com esses dados. Não é necessário instalar .NET ou Node.js no computador.
+
+Nas próximas vezes, execute `bash iniciar.sh` novamente; os dados existentes são preservados. Para parar, use `docker compose stop`. A primeira execução demora mais porque baixa as imagens e compila o sistema. Se uma etapa falhar, corrija o erro indicado e execute o script novamente. Bancos de versões antigas precisam da adequação de perfis descrita abaixo.
+
+### Execução sem Docker
+
 1. Instale o SDK .NET 10 e disponibilize SQL Server 2022.
 2. Em uma base nova, execute `Data/LeadScopeB2B.sql`. As definições das 14 tabelas correspondem a `Docs/Database/LeadScopeB2B.sql`. `Docs/Database/InsertCPPA.sql` contém apenas referências de perfis.
 3. Em uma base anterior, execute **somente** `Data/AdequarPerfis.sql` antes de usar esta versão. O script renomeia os conjuntos Admin → Administrador, Gestor → Revisor e Leitura → Usuário, preservando IDs e relacionamentos. Revise a atribuição dos usuários: o antigo Gestor passa a revisar e o antigo Leitura passa a cadastrar.
