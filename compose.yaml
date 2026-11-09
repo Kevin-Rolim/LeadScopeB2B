@@ -42,8 +42,25 @@ services:
       - dataprotection_keys:/app/keys
       - integracoes_data:/app/integracoes
     depends_on:
+      db-init:
+        condition: service_completed_successfully
+  
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Defina a senha no .env}
+    depends_on:
       sqlserver:
         condition: service_healthy
+    entrypoint: ["/bin/bash", "-ec"]
+    command: |
+      SQLCMDPASSWORD="$$MSSQL_SA_PASSWORD" \
+      /opt/mssql-tools18/bin/sqlcmd \
+        -S sqlserver,1433 -U sa -C -b \
+        -Q "IF DB_ID(N'LeadScopeB2B') IS NULL CREATE DATABASE [LeadScopeB2B];"
+
+      echo "Banco LeadScopeB2B verificado."
+    restart: "no"
 
 volumes:
   sqlserver_data:
