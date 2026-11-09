@@ -3,27 +3,19 @@
     ViewData["Title"] = "Usuários";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h3 mb-1">Usuários</h1>
-        <p class="text-muted mb-0">Gerencie as pessoas que acessam o LeadScope.</p>
-    </div>
-    <a asp-action="Create" class="btn btn-primary">Novo usuário</a>
-</div>
-
-@if (TempData["Sucesso"] is string mensagem)
-{
-    <div class="alert alert-success">@mensagem</div>
-}
-
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
+<header class="page-header"><div><h1 class="page-title">Usuários</h1><p>Gerencie os usuários e atribua seus perfis de acesso.</p></div><div class="flex gap-2">
+@if(User.IsInRole("ADMIN")) { <a data-panel asp-action="Create" class="button button-primary"><partial name="_Icon" model='"plus"' />Cadastrar usuário</a> }
+</div></header>
+<section class="surface overflow-hidden">
+@if(Model.Count > 0) {
+<div class="table-scroll">
+    <table class="data-table">
         <thead>
             <tr>
                 <th>Nome</th>
                 <th>E-mail</th>
                 <th>Perfil</th>
-                <th class="text-end">Ações</th>
+                <th class="text-right">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -33,9 +25,9 @@
                 <td>@usuario.Nome</td>
                 <td>@usuario.Email</td>
                 <td>@usuario.PerfilAcesso</td>
-                <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
-                    <a asp-action="Edit" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                <td class="text-right">
+                    <a data-panel asp-action="Details" asp-route-id="@usuario.Id" class="button button-sm button-secondary"><partial name="_Icon" model='"eye"' />Detalhes</a>
+                    @if(User.IsInRole("ADMIN")) { <a data-panel asp-action="Edit" asp-route-id="@usuario.Id" class="button button-sm button-secondary">Editar</a> }
                 </td>
             </tr>
         }
@@ -43,7 +35,6 @@
     </table>
 </div>
 
-@if (Model.Count == 0)
-{
-    <p class="text-muted">Nenhum usuário cadastrado.</p>
 }
+@if (Model.Count == 0) { <partial name="_EmptyState" model='new EmptyState("Nenhum registro encontrado", "Cadastre um registro ou ajuste os filtros de pesquisa.", "users")' /> }
+<footer class="surface-footer">Exibindo <span class="font-mono text-foreground">@Model.Count</span> usuários nesta consulta</footer></section>

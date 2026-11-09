@@ -4,20 +4,26 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>LeadScopeB2B-local-development</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Tests/**/*.cs" />
+    <Content Remove="node_modules/**;Design de referencia/**;Frontend/**;scripts/**;artifacts/**" />
+    <None Remove="node_modules/**;Design de referencia/**;artifacts/**" />
+    <Content Remove="Tests/**" />
+    <Content Remove="App_Data/**" />
+    <None Remove="App_Data/**" />
+    <None Remove="Tests/**" />
+  </ItemGroup>
+
+  <Target Name="CheckUiAssets" BeforeTargets="Build;Publish">
+    <Error Condition="!Exists('wwwroot/css/site.css') Or !Exists('wwwroot/icons/lucide.svg')" Text="Recursos visuais ausentes. Execute npm ci e npm run build antes da compilação." />
+  </Target>
 </Project>
 

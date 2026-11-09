@@ -3,18 +3,33 @@
     ViewData["Title"] = "Editar empresa";
 }
 
-<h1 class="h3">Editar empresa</h1>
+<h1 class="page-title">Editar empresa</h1>
 
-<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="card card-body mt-3">
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="surface form-surface mt-3">
     <input asp-for="Id" type="hidden" />
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <div asp-validation-summary="ModelOnly" class="text-destructive mb-3"></div>
     <partial name="_FormFields" model="Model" />
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Salvar alterações</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    <div class="form-actions">
+        <button type="submit" class="button button-primary">Salvar alterações</button>
+        <a asp-action="Index" class="button button-secondary">Cancelar</a>
     </div>
 </form>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<section class="surface p-5 mt-6">
+<h2 class="form-legend">CNAEs da empresa</h2>
+<p class="text-xs text-muted-foreground mb-4">Salve o cadastro antes de alterar os CNAEs. Pesquise no catálogo por código ou descrição.</p>
+@foreach(var item in (ViewBag.Cnaes as List<CnaesEmpresas> ?? [])) {
+<form asp-action="RemoverCnae" asp-route-id="@Model.Id" method="post" class="flex items-center justify-between gap-3 border-b py-3">
+<input type="hidden" name="numero" value="@item.CnaeNumero" /><span><code>@item.CnaeNumero</code><span class="block text-xs text-muted-foreground">@item.Cnaes.Descricao</span></span><button class="button button-sm button-danger-outline">Desassociar</button>
+</form>
 }
+<form method="get" asp-action="Edit" asp-route-id="@Model.Id" class="space-y-2 mt-4">
+<label for="cnaeBusca" class="field-label">Pesquisar catálogo (até 200 resultados)</label>
+<div class="flex gap-2"><input id="cnaeBusca" name="cnaeBusca" class="input" value="@Context.Request.Query["cnaeBusca"]" placeholder="Código ou descrição" /><button class="button button-secondary">Pesquisar CNAE</button></div>
+</form>
+<form asp-action="AssociarCnae" asp-route-id="@Model.Id" method="post" class="space-y-2 mt-4">
+<label for="numero" class="field-label">CNAE disponível</label><select id="numero" name="numero" class="input" required>
+<option value="">Selecione</option>
+@foreach(var item in (ViewBag.CatalogoCnaes as List<Cnaes> ?? [])) { <option value="@item.Numero">@item.Numero — @item.Descricao</option> }
+</select><button class="button button-secondary">Associar</button>
+</form></section>
+<form asp-action="Excluir" asp-route-id="@Model.Id" method="post" class="mt-6" data-confirm="Remover esta empresa da base ativa?"><button class="button button-danger-outline">Remover empresa</button></form>

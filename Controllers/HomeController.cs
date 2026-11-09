@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LeadScopeB2B.Controllers;
 
-public class HomeController : Controller
+public class HomeController(LeadScopeB2B.Services.EmpresaService empresas, LeadScopeB2B.Services.PessoaService pessoas, LeadScopeB2B.Services.LeadService leads) : Controller
 {
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        return View(new LeadScopeB2B.ViewModels.Home.OverviewViewModel { Empresas = await empresas.ListarAsync(), Pessoas = await pessoas.ListarAsync(), Leads = await leads.ListarAsync() });
     }
 
+    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

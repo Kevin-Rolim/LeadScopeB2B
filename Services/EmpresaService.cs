@@ -11,9 +11,9 @@ public class EmpresaService
         _repository = repository;
     }
 
-    public async Task<List<EmpresaListViewModel>> ListarAsync()
+    public async Task<List<EmpresaListViewModel>> ListarAsync(string? busca = null, string? status = null, string? cnae = null)
     {
-        var empresas = await _repository.ListarAsync();
+        var empresas = await _repository.ListarAsync(CadastroRules.Limpar(busca), CadastroRules.Limpar(status), CadastroRules.Limpar(cnae) is string numero ? CnaeService.Normalizar(numero) : null);
         return empresas.Select(e => new EmpresaListViewModel
         {
             Id = e.Id,
@@ -39,8 +39,9 @@ public class EmpresaService
         return empresa is null ? null : MapearFormulario(empresa);
     }
 
-    public async Task CadastrarAsync(EmpresaFormViewModel model)
+    public async Task<int> CadastrarAsync(EmpresaFormViewModel model)
     {
+        Validar(model);
         await ValidarCnpjAsync(model.Cnpj);
         var agora = DateTime.UtcNow;
         var empresa = new Empresas
@@ -50,6 +51,7 @@ public class EmpresaService
         };
         Aplicar(model, empresa);
         await _repository.AdicionarAsync(empresa);
+        return empresa.Id;
     }
 
     public async Task EditarAsync(EmpresaFormViewModel model)
@@ -57,18 +59,19 @@ public class EmpresaService
         var empresa = await _repository.ObterPorIdAsync(model.Id)
             ?? throw new KeyNotFoundException("Empresa não encontrada.");
 
+        Validar(model);
         await ValidarCnpjAsync(model.Cnpj, model.Id);
         Aplicar(model, empresa);
         empresa.DataAtualizacao = DateTime.UtcNow;
-        await _repository.SalvarAlteracoesAsync();
+        await _repository.AtualizarAsync(empresa);
     }
 
     private async Task ValidarCnpjAsync(string? cnpj, int? empresaId = null)
     {
         if (!string.IsNullOrWhiteSpace(cnpj) &&
-            await _repository.CnpjExisteAsync(cnpj.Trim(), empresaId))
+            await _repository.CnpjExisteAsync(CadastroRules.Cnpj(cnpj)!, empresaId))
         {
-            throw new InvalidOperationException("Já existe uma empresa cadastrada com este CNPJ.");
+            throw new ConflitoException("Já existe uma empresa cadastrada com este CNPJ.");
         }
     }
 
@@ -76,15 +79,15 @@ public class EmpresaService
     {
         empresa.RazaoSocial = model.RazaoSocial.Trim();
         empresa.NomeFantasia = Limpar(model.NomeFantasia);
-        empresa.Cnpj = Limpar(model.Cnpj);
-        empresa.UrlSite = Limpar(model.UrlSite);
+        empresa.Cnpj = CadastroRules.Cnpj(model.Cnpj);
+        empresa.UrlSite = CadastroRules.Url(model.UrlSite);
         empresa.Segmento = Limpar(model.Segmento);
         empresa.Porte = Limpar(model.Porte);
         empresa.Cidade = Limpar(model.Cidade);
         empresa.Estado = Limpar(model.Estado)?.ToUpperInvariant();
         empresa.Email = Limpar(model.Email)?.ToLowerInvariant();
         empresa.Telefone = Limpar(model.Telefone);
-        empresa.Status = model.Status.Trim();
+        empresa.Status = CadastroRules.Estado(model.Status, "PENDENTE", "VALIDADA", "INATIVA");
     }
 
     private static EmpresaFormViewModel MapearFormulario(Empresas empresa) => new()
@@ -120,6 +123,16 @@ public class EmpresaService
         DataCriacao = empresa.DataCriacao,
         DataAtualizacao = empresa.DataAtualizacao
     };
+
+    public Task ExcluirAsync(int id) => _repository.ExcluirAsync(id);
+
+    private static void Validar(EmpresaFormViewModel model)
+    {
+        CadastroRules.Validar(model);
+        CadastroRules.Cnpj(model.Cnpj);
+        CadastroRules.Url(model.UrlSite);
+        CadastroRules.Estado(model.Status, "PENDENTE", "VALIDADA", "INATIVA");
+    }
 
     private static string? Limpar(string? valor)
     {

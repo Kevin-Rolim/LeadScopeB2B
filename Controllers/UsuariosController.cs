@@ -1,8 +1,11 @@
+using LeadScopeB2B.Security;
+using Microsoft.AspNetCore.Authorization;
 using LeadScopeB2B.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LeadScopeB2B.Controllers;
 
+[Authorize(Policy = Acesso.Admin)]
 public class UsuariosController : Controller
 {
     private readonly UsuarioService _service;

@@ -1,0 +1,6 @@
+@model decimal?
+@if(Model is decimal value) {
+    var percent = Math.Clamp(value, 0, 100);
+    var color = percent >= 75 ? "var(--success)" : percent >= 50 ? "var(--warning)" : "var(--destructive)";
+    <span class="confidence" aria-label="Confiança: @percent%"><span class="confidence-track" aria-hidden="true"><span class="confidence-fill block" style="width:@(percent.ToString(System.Globalization.CultureInfo.InvariantCulture))%;background:@color"></span></span><span class="confidence-value">@percent.ToString("0.##")%</span></span>
+} else { <span class="text-muted-foreground">—</span> }

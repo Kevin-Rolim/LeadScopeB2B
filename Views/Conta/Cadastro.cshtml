@@ -1,0 +1,15 @@
+@model CadastroViewModel
+@{ ViewData["Title"] = "Criar conta"; }
+<div class="account-form">
+<h1 class="page-title">Criar conta</h1>
+<p class="text-muted-foreground">Crie sua conta para cadastrar empresas e pessoas, manter vínculos e organizar sua base de leads.</p>
+<form asp-action="Cadastro" method="post" class="surface form-surface gap-2">
+    <div asp-validation-summary="ModelOnly" class="text-destructive" role="alert"></div>
+    <label asp-for="Nome" class="field-label"></label><input asp-for="Nome" class="input" autocomplete="name" /><span asp-validation-for="Nome" class="text-destructive"></span>
+    <label asp-for="Email" class="field-label"></label><input asp-for="Email" class="input" autocomplete="email" /><span asp-validation-for="Email" class="text-destructive"></span>
+    <label asp-for="Senha" class="field-label"></label><input asp-for="Senha" class="input" autocomplete="new-password" /><span asp-validation-for="Senha" class="text-destructive"></span>
+    <label asp-for="ConfirmacaoSenha" class="field-label"></label><input asp-for="ConfirmacaoSenha" class="input" autocomplete="new-password" /><span asp-validation-for="ConfirmacaoSenha" class="text-destructive"></span>
+    <button class="button button-primary mt-2" type="submit">Criar conta</button>
+</form>
+<p class="mt-3">Já possui cadastro? <a asp-action="Login">Entrar</a></p>
+</div>

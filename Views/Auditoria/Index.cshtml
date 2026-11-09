@@ -1,0 +1,9 @@
+@model IReadOnlyList<Logs>
+@{ ViewData["Title"] = "Auditoria"; }
+<partial name="_PageHeader" model='new PageHeader("Auditoria", "Últimos 200 eventos registrados. Datas e horários em UTC.")' />
+<section class="surface overflow-hidden">
+@if(Model.Count == 0) { <partial name="_EmptyState" model='new EmptyState("Nenhum evento registrado", "As ações auditadas aparecerão aqui.", "history")' /> }
+else { <div class="table-scroll"><table class="data-table"><thead><tr><th>Data (UTC)</th><th>Usuário</th><th>Evento</th><th>Descrição</th></tr></thead><tbody>
+@foreach(var item in Model) { <tr><td class="font-mono text-xs whitespace-nowrap">@(item.DataHora?.ToString("dd/MM/yyyy HH:mm") ?? "—")</td><td>@item.Usuarios.Nome</td><td><code>@item.TipoEvento</code></td><td>@item.DescricaoEvento</td></tr> }
+</tbody></table></div> }
+<footer class="surface-footer">@Model.Count eventos nesta consulta</footer></section>

@@ -1,0 +1,14 @@
+@model AlterarSenhaViewModel
+@{ ViewData["Title"] = "Alterar senha"; }
+<div class="account-form">
+<h1 class="page-title">Alterar senha</h1>
+<p class="text-muted-foreground">Após a alteração, entre novamente com a nova senha. Todas as sessões anteriores serão encerradas.</p>
+<form asp-action="AlterarSenha" method="post" class="surface form-surface gap-2">
+    <div asp-validation-summary="ModelOnly" class="text-destructive" role="alert"></div>
+    <label asp-for="SenhaAtual" class="field-label"></label><input asp-for="SenhaAtual" class="input" autocomplete="current-password" /><span asp-validation-for="SenhaAtual" class="text-destructive"></span>
+    <label asp-for="NovaSenha" class="field-label"></label><input asp-for="NovaSenha" class="input" autocomplete="new-password" /><span asp-validation-for="NovaSenha" class="text-destructive"></span>
+    <label asp-for="ConfirmacaoSenha" class="field-label"></label><input asp-for="ConfirmacaoSenha" class="input" autocomplete="new-password" /><span asp-validation-for="ConfirmacaoSenha" class="text-destructive"></span>
+    <button class="button button-primary mt-2" type="submit">Alterar senha</button>
+</form>
+<a asp-action="Perfil" class="button button-secondary mt-3">Voltar ao perfil</a>
+</div>

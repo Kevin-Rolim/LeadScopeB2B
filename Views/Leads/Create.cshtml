@@ -3,18 +3,14 @@
     ViewData["Title"] = "Novo lead";
 }
 
-<h1 class="h3">Novo lead</h1>
-<p class="text-muted">Associe uma pessoa a uma empresa e qualifique o vínculo.</p>
+<h1 class="page-title">Novo lead</h1>
+<p class="text-muted-foreground">Associe uma pessoa a uma empresa e qualifique o vínculo.</p>
 
-<form asp-action="Create" method="post" class="card card-body">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<form asp-action="Create" method="post" class="surface form-surface">
+    <div asp-validation-summary="ModelOnly" class="text-destructive mb-3"></div>
     <partial name="_FormFields" model="Model" />
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Salvar</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    <div class="form-actions">
+        <button type="submit" class="button button-primary">Salvar</button>
+        <a asp-action="Index" class="button button-secondary">Cancelar</a>
     </div>
 </form>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}

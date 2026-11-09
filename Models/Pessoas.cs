@@ -4,7 +4,6 @@ namespace LeadScopeB2B.Models;
 
 public class Pessoas
 {
-    [Key]
     public int Id { get; set; }
 
     [Required]
@@ -19,7 +18,7 @@ public class Pessoas
     public string? Telefone { get; set; }
 
     [StringLength(255)]
-    public string? UrlLinkedin { get; set; }
+    public string? UrlLinkedIn { get; set; }
 
     [StringLength(50)]
     public string? Status { get; set; }
@@ -27,9 +26,9 @@ public class Pessoas
     [StringLength(100)]
     public string? Origem { get; set; }
 
-    public DateTime DataColeta { get; set; }
+    public DateTime? DataColeta { get; set; }
 
     public DateTime? DataBloqueio { get; set; }
 
-    public DateTime? DataDel { get; set; }
+    public DateTime? DataExclusao { get; set; }
 }

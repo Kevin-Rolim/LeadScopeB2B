@@ -1,0 +1,15 @@
+@inject LeadScopeB2B.Services.CnaeService Cnaes
+@{
+ var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+ var hasCnae = controller is "Empresas" or "Leads";
+ var estados = controller switch { "Pessoas" => new[]{"PENDENTE","VALIDADO","BLOQUEADO"}, "Empresas" => new[]{"PENDENTE","VALIDADA","INATIVA"}, _ => new[]{"NOVO","EM_ANALISE","QUALIFICADO","REJEITADO"} };
+}
+<form method="get" class="filters @(!hasCnae ? "no-cnae" : "")" role="search">
+@foreach(var chave in new[]{"pessoaId","empresaId"}) { if(Context.Request.Query.TryGetValue(chave,out var valor)) { <input type="hidden" name="@chave" value="@valor" /> } }
+<div class="search-field"><label for="busca" class="field-label">Pesquisar</label><partial name="_Icon" model='"search"' /><input id="busca" name="busca" value="@Context.Request.Query["busca"]" class="input" maxlength="200" placeholder="@(controller == "Empresas" ? "Pesquisar por nome ou CNPJ" : "Pesquisar por nome ou informação de contato")" /></div>
+<div><label for="status" class="field-label">Status</label><select id="status" name="status" class="input"><option value="">Todos os status</option>@foreach(var estado in estados) { <option value="@estado" selected="@(Context.Request.Query["status"] == estado)">@Presentation.Status(estado)</option> }</select></div>
+@if(hasCnae) {
+<div><label for="cnae" class="field-label">CNAE</label><input id="cnae" name="cnae" value="@Context.Request.Query["cnae"]" class="input font-mono text-xs" maxlength="200" pattern="[0-9]{7}" placeholder="CNAE · código ou descrição" list="catalogo-cnaes" /><datalist id="catalogo-cnaes">@foreach(var cnae in await Cnaes.ListarAsync()) { <option value="@cnae.Numero">@cnae.Descricao</option> }</datalist></div>
+}
+<div class="flex gap-1"><button type="submit" class="button button-secondary">Filtrar</button><a asp-action="Index" class="button button-ghost">Limpar</a></div>
+</form>

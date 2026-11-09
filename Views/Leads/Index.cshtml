@@ -3,53 +3,51 @@
     ViewData["Title"] = "Leads";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h3 mb-1">Leads</h1>
-        <p class="text-muted mb-0">Vínculos entre pessoas e empresas.</p>
-    </div>
-    <a asp-action="Create" class="btn btn-primary">Novo lead</a>
-</div>
-
-@if (TempData["Sucesso"] is string mensagem)
-{
-    <div class="alert alert-success">@mensagem</div>
+<header class="page-header"><div><h1 class="page-title">Leads</h1><p>Pessoas vinculadas a empresas, com status de qualificação e nível de confiança.</p></div><div class="flex gap-2">
+@if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) { <a data-panel asp-action="Create" class="button button-primary"><partial name="_Icon" model='"plus"' />Cadastrar lead</a> }
+</div></header>
+<section class="surface overflow-hidden"><nav class="tabs" aria-label="Filtrar leads por status">
+@foreach(var item in new[]{("", "Todos"),("EM_ANALISE", "Em análise"),("QUALIFICADO", "Qualificado"),("REJEITADO", "Rejeitado")}) {
+<a asp-action="Index" asp-route-status="@item.Item1" asp-route-busca="@Context.Request.Query["busca"]" asp-route-cnae="@Context.Request.Query["cnae"]" asp-route-pessoaId="@Context.Request.Query["pessoaId"]" asp-route-empresaId="@Context.Request.Query["empresaId"]" class="tab @(Context.Request.Query["status"] == item.Item1 ? "active" : "")" aria-current="@(Context.Request.Query["status"] == item.Item1 ? "page" : null)">@item.Item2</a>
 }
-
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
+</nav><partial name="_Filtros" />
+@if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) {
+<form id="exportar" asp-action="Exportar" method="post" class="flex flex-wrap items-center gap-2 p-3 border-b" data-download><button class="button button-secondary button-sm"><partial name="_Icon" model='"download"' />Exportar selecionados (CSV)</button><span class="text-xs text-muted-foreground">Leads qualificados, vínculo ativo e cadastros validados.</span></form>
+}
+@if(Model.Count > 0) {
+<div class="table-scroll">
+    <table class="data-table">
         <thead>
             <tr>
-                <th>Pessoa</th>
+                <th aria-label="Selecionar para exportar"></th><th>Pessoa</th>
                 <th>Empresa</th>
                 <th>Cargo</th>
                 <th>Senioridade</th>
                 <th>Status</th>
                 <th>Confiança</th>
-                <th class="text-end">Ações</th>
+                <th class="text-right">Ações</th>
             </tr>
         </thead>
         <tbody>
         @foreach (var lead in Model)
         {
             <tr>
-                <td>@lead.Pessoa</td>
+                <td>@if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) {<input type="checkbox" name="selecionados" value="@lead.PessoaId:@lead.EmpresaId" form="exportar" aria-label="Selecionar @lead.Pessoa" />}</td><td>@lead.Pessoa</td>
                 <td>@lead.Empresa</td>
                 <td>@(lead.Cargo ?? "—")</td>
                 <td>@(lead.Senioridade ?? "—")</td>
-                <td>@(lead.StatusLead ?? "—")</td>
-                <td>@(lead.NivelConfianca.HasValue ? $"{lead.NivelConfianca:0.##}%" : "—")</td>
-                <td class="text-end">
-                    <a asp-action="Details" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" class="btn btn-sm btn-outline-secondary">Detalhes</a>
-                    <a asp-action="Edit" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" class="btn btn-sm btn-outline-primary">Editar</a>
-                </td>
+                <td><partial name="_Status" model='(lead.StatusLead ?? "")' /></td>
+                <td><partial name="_Confidence" model="lead.NivelConfianca" /></td>
+                <td class="text-right">
+                    <a data-panel asp-action="Details" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" class="button button-sm button-secondary"><partial name="_Icon" model='"eye"' />Detalhes</a>
+                    @if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) { <a data-panel asp-action="Edit" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" class="button button-sm button-secondary">Editar</a> }
+                @if(User.IsInRole("ADMIN") || User.IsInRole("REVISOR")) { <a data-panel asp-action="Details" asp-route-pessoaId="@lead.PessoaId" asp-route-empresaId="@lead.EmpresaId" asp-fragment="revisao" class="button button-secondary button-sm">Revisar</a> }</td>
             </tr>
         }
         </tbody>
     </table>
 </div>
 
-@if (Model.Count == 0)
-{
-    <p class="text-muted">Nenhum lead cadastrado.</p>
 }
+@if (Model.Count == 0) { <partial name="_EmptyState" model='new EmptyState("Nenhum registro encontrado", "Cadastre um registro ou ajuste os filtros de pesquisa.", "target")' /> }
+<footer class="surface-footer">Exibindo <span class="font-mono text-foreground">@Model.Count</span> leads nesta consulta</footer></section>

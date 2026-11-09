@@ -3,33 +3,37 @@
     ViewData["Title"] = "Detalhes da pessoa";
 }
 
-<div class="d-flex justify-content-between align-items-start">
+<div class="flex justify-between items-start">
     <div>
-        <h1 class="h3">@Model.Nome</h1>
-        <p class="text-muted">Contato coletado em @Model.DataColeta.ToString("dd/MM/yyyy HH:mm")</p>
+        <h1 class="page-title">@Model.Nome</h1>
+        <p class="text-muted-foreground">Contato registrado em @(Model.DataColeta?.ToString("dd/MM/yyyy HH:mm") ?? "—")</p>
     </div>
     @if (Model.DataBloqueio.HasValue)
     {
-        <span class="badge text-bg-warning">Bloqueada</span>
+        <span class="status status-warning">Bloqueada</span>
     }
 </div>
 
-<dl class="row card card-body">
-    <dt class="col-sm-3">E-mail</dt><dd class="col-sm-9">@(Model.Email ?? "—")</dd>
-    <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9">@(Model.Telefone ?? "—")</dd>
-    <dt class="col-sm-3">LinkedIn</dt><dd class="col-sm-9">@(Model.UrlLinkedin ?? "—")</dd>
-    <dt class="col-sm-3">Status</dt><dd class="col-sm-9">@(Model.Status ?? "—")</dd>
-    <dt class="col-sm-3">Origem</dt><dd class="col-sm-9">@(Model.Origem ?? "—")</dd>
+<dl class="detail-list">
+    <dt class="detail-label">E-mail</dt><dd class="detail-value">@(Model.Email ?? "—")</dd>
+    <dt class="detail-label">Telefone</dt><dd class="detail-value">@(Model.Telefone ?? "—")</dd>
+    <dt class="detail-label">LinkedIn</dt><dd class="detail-value">@(Model.UrlLinkedIn ?? "—")</dd>
+    <dt class="detail-label">Status</dt><dd class="detail-value"><partial name="_Status" model='(Model.Status ?? "")' /></dd>
+    <dt class="detail-label">Origem</dt><dd class="detail-value">@(Model.Origem ?? "—")</dd>
 </dl>
 
-<div class="d-flex gap-2 flex-wrap">
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+<div class="flex gap-2 flex-wrap">
+    @if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) { <a data-panel asp-action="Edit" asp-route-id="@Model.Id" class="button button-primary">Editar</a> }
+    @if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) {
     <form asp-action="AlterarBloqueio" asp-route-id="@Model.Id" method="post">
         <input type="hidden" name="bloquear" value="@(!Model.DataBloqueio.HasValue ? "true" : "false")" />
-        <button type="submit" class="btn btn-outline-warning">
+        <button type="submit" class="button button-warning">
             @(Model.DataBloqueio.HasValue ? "Desbloquear" : "Bloquear")
         </button>
     </form>
-    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Remover</a>
-    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+    }
+    @if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) { <a data-panel asp-action="Delete" asp-route-id="@Model.Id" class="button button-danger-outline">Remover</a> }
+    <a asp-action="Index" class="button button-secondary">Voltar</a>
 </div>
+
+<a asp-controller="Leads" asp-action="Index" asp-route-pessoaId="@Model.Id" class="button button-secondary mt-3">Ver leads desta pessoa</a>

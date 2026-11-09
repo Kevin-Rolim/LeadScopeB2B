@@ -1,0 +1,16 @@
+@model RecuperarAcessoViewModel
+@{ ViewData["Title"] = "Recuperar acesso"; }
+<div class="account-form">
+<h1 class="page-title">Recuperar acesso</h1>
+@if(ViewData["RecuperacaoDisponivel"] is true) {
+    <p>Informe o e-mail do seu cadastro para solicitar instruções de recuperação.</p>
+    <form asp-action="RecuperarAcesso" method="post" class="surface form-surface gap-2">
+        <div asp-validation-summary="ModelOnly" class="text-destructive" role="alert"></div>
+        <label asp-for="Email" class="field-label"></label><input asp-for="Email" class="input" autocomplete="email" /><span asp-validation-for="Email" class="text-destructive"></span>
+        <button class="button button-primary mt-2" type="submit">Solicitar recuperação</button>
+    </form>
+} else {
+    <div class="notice notice-warning" role="status">@LeadScopeB2B.Services.RecuperacaoAcessoService.MensagemIndisponivel</div>
+}
+<p class="mt-3"><a asp-action="Login">Voltar para entrar</a> · <a asp-action="Cadastro">Criar conta</a></p>
+</div>

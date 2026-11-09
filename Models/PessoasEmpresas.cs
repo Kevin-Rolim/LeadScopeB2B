@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LeadScopeB2B.Models;
 
@@ -32,14 +31,13 @@ public class PessoasEmpresas
 
     public DateTime? DataRevisao { get; set; }
 
-    [Column(TypeName = "decimal(5,2)")]
     [Range(0, 100)]
     public decimal? NivelConfianca { get; set; }
 
     [StringLength(100)]
     public string? FonteVinculo { get; set; }
 
-    public DateTime? DataVerif { get; set; }
+    public DateTime? DataVerificacao { get; set; }
 
     public ICollection<Revisoes> Revisoes { get; set; } = new List<Revisoes>();
 

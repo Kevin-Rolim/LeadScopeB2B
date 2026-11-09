@@ -3,21 +3,13 @@
     ViewData["Title"] = "Empresas";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h3 mb-1">Empresas</h1>
-        <p class="text-muted mb-0">Base de organizações prospectadas.</p>
-    </div>
-    <a asp-action="Create" class="btn btn-primary">Nova empresa</a>
-</div>
-
-@if (TempData["Sucesso"] is string mensagem)
-{
-    <div class="alert alert-success">@mensagem</div>
-}
-
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
+<header class="page-header"><div><h1 class="page-title">Empresas</h1><p>Consulte empresas cadastradas por nome, CNPJ, status e CNAE.</p></div><div class="flex gap-2">
+@if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) { <a asp-controller="Importacao" asp-action="Index" class="button button-secondary"><partial name="_Icon" model='"upload"' />Importar CSV</a><a data-panel asp-action="Create" class="button button-primary"><partial name="_Icon" model='"plus"' />Cadastrar empresa</a> }
+</div></header>
+<section class="surface overflow-hidden"><partial name="_Filtros" />
+@if(Model.Count > 0) {
+<div class="table-scroll">
+    <table class="data-table">
         <thead>
             <tr>
                 <th>Empresa</th>
@@ -25,7 +17,7 @@
                 <th>Segmento</th>
                 <th>Localidade</th>
                 <th>Status</th>
-                <th class="text-end">Ações</th>
+                <th class="text-right">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -36,16 +28,16 @@
                     <strong>@(empresa.NomeFantasia ?? empresa.RazaoSocial)</strong>
                     @if (!string.IsNullOrWhiteSpace(empresa.NomeFantasia))
                     {
-                        <div class="small text-muted">@empresa.RazaoSocial</div>
+                        <div class="text-xs text-muted-foreground">@empresa.RazaoSocial</div>
                     }
                 </td>
-                <td>@(empresa.Cnpj ?? "—")</td>
+                <td class="font-mono text-xs">@(empresa.Cnpj ?? "—")</td>
                 <td>@(empresa.Segmento ?? "—")</td>
                 <td>@(string.Join("/", new[] { empresa.Cidade, empresa.Estado }.Where(x => !string.IsNullOrWhiteSpace(x))))</td>
-                <td>@(empresa.Status ?? "—")</td>
-                <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@empresa.Id" class="btn btn-sm btn-outline-secondary">Detalhes</a>
-                    <a asp-action="Edit" asp-route-id="@empresa.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                <td><partial name="_Status" model='(empresa.Status ?? "")' /></td>
+                <td class="text-right">
+                    <a data-panel asp-action="Details" asp-route-id="@empresa.Id" class="button button-sm button-secondary"><partial name="_Icon" model='"eye"' />Detalhes</a>
+                    @if(User.IsInRole("ADMIN") || User.IsInRole("USUARIO")) { <a data-panel asp-action="Edit" asp-route-id="@empresa.Id" class="button button-sm button-secondary">Editar</a> }
                 </td>
             </tr>
         }
@@ -53,7 +45,6 @@
     </table>
 </div>
 
-@if (Model.Count == 0)
-{
-    <p class="text-muted">Nenhuma empresa cadastrada.</p>
 }
+@if (Model.Count == 0) { <partial name="_EmptyState" model='new EmptyState("Nenhum registro encontrado", "Cadastre um registro ou ajuste os filtros de pesquisa.", "building-2")' /> }
+<footer class="surface-footer">Exibindo <span class="font-mono text-foreground">@Model.Count</span> empresas nesta consulta</footer></section>

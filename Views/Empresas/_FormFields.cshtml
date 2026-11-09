@@ -1,59 +1,17 @@
 @model EmpresaFormViewModel
-
-<div class="row g-3">
-    <div class="col-md-6">
-        <label asp-for="RazaoSocial" class="form-label"></label>
-        <input asp-for="RazaoSocial" class="form-control" />
-        <span asp-validation-for="RazaoSocial" class="text-danger"></span>
-    </div>
-    <div class="col-md-6">
-        <label asp-for="NomeFantasia" class="form-label"></label>
-        <input asp-for="NomeFantasia" class="form-control" />
-        <span asp-validation-for="NomeFantasia" class="text-danger"></span>
-    </div>
-    <div class="col-md-4">
-        <label asp-for="Cnpj" class="form-label"></label>
-        <input asp-for="Cnpj" class="form-control" />
-        <span asp-validation-for="Cnpj" class="text-danger"></span>
-    </div>
-    <div class="col-md-4">
-        <label asp-for="Segmento" class="form-label"></label>
-        <input asp-for="Segmento" class="form-control" />
-        <span asp-validation-for="Segmento" class="text-danger"></span>
-    </div>
-    <div class="col-md-4">
-        <label asp-for="Porte" class="form-label"></label>
-        <input asp-for="Porte" class="form-control" />
-        <span asp-validation-for="Porte" class="text-danger"></span>
-    </div>
-    <div class="col-md-8">
-        <label asp-for="UrlSite" class="form-label"></label>
-        <input asp-for="UrlSite" class="form-control" />
-        <span asp-validation-for="UrlSite" class="text-danger"></span>
-    </div>
-    <div class="col-md-4">
-        <label asp-for="Status" class="form-label"></label>
-        <input asp-for="Status" class="form-control" />
-        <span asp-validation-for="Status" class="text-danger"></span>
-    </div>
-    <div class="col-md-8">
-        <label asp-for="Cidade" class="form-label"></label>
-        <input asp-for="Cidade" class="form-control" />
-        <span asp-validation-for="Cidade" class="text-danger"></span>
-    </div>
-    <div class="col-md-4">
-        <label asp-for="Estado" class="form-label"></label>
-        <input asp-for="Estado" class="form-control" maxlength="2" />
-        <span asp-validation-for="Estado" class="text-danger"></span>
-    </div>
-    <div class="col-md-6">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-    <div class="col-md-6">
-        <label asp-for="Telefone" class="form-label"></label>
-        <input asp-for="Telefone" class="form-control" />
-        <span asp-validation-for="Telefone" class="text-danger"></span>
-    </div>
-</div>
+<fieldset class="form-section"><legend class="form-legend">Identificação</legend>
+<div class="form-grid">
+<div class="field-grow"><label asp-for="RazaoSocial" class="field-label"></label><input asp-for="RazaoSocial" class="input" placeholder="Ex.: Empresa Exemplo Ltda." /><span asp-validation-for="RazaoSocial"></span></div>
+<div class="field-half"><label asp-for="NomeFantasia" class="field-label"></label><input asp-for="NomeFantasia" class="input" /><span asp-validation-for="NomeFantasia"></span></div>
+<div class="field-half"><label asp-for="Cnpj" class="field-label"></label><input asp-for="Cnpj" class="input font-mono" placeholder="00.000.000/0000-00" /><span asp-validation-for="Cnpj"></span></div>
+<div class="field-half"><label asp-for="Segmento" class="field-label"></label><input asp-for="Segmento" class="input" /><span asp-validation-for="Segmento"></span></div>
+<div class="field-half"><label asp-for="Porte" class="field-label"></label><input asp-for="Porte" class="input" /><span asp-validation-for="Porte"></span></div>
+<div class="field-grow"><label asp-for="Status" class="field-label"></label><select asp-for="Status" class="input"><option value="PENDENTE">Em verificação</option><option value="VALIDADA">Ativa</option><option value="INATIVA">Inativa</option></select><span asp-validation-for="Status"></span></div>
+</div></fieldset>
+<fieldset class="form-section"><legend class="form-legend">Localização e contato</legend><div class="form-grid">
+<div class="field-two-thirds"><label asp-for="Cidade" class="field-label"></label><input asp-for="Cidade" class="input" /><span asp-validation-for="Cidade"></span></div>
+<div class="field-third"><label asp-for="Estado" class="field-label">UF</label><input asp-for="Estado" class="input" maxlength="2" placeholder="SP" /><span asp-validation-for="Estado"></span></div>
+<div class="field-half"><label asp-for="Email" class="field-label"></label><input asp-for="Email" class="input" placeholder="contato@empresa.com.br" /><span asp-validation-for="Email"></span></div>
+<div class="field-half"><label asp-for="Telefone" class="field-label"></label><input asp-for="Telefone" class="input font-mono" placeholder="(00) 0000-0000" /><span asp-validation-for="Telefone"></span></div>
+<div class="field-grow"><label asp-for="UrlSite" class="field-label"></label><input asp-for="UrlSite" class="input" placeholder="https://empresa.com.br" /><span asp-validation-for="UrlSite"></span></div>
+</div></fieldset>
