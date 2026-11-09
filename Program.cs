@@ -13,8 +13,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Net;
+using LeadScopeB2B.Configuration;
 
 var builder = WebApplication.CreateBuilder(args.Where(arg => arg != "--criar-admin").ToArray());
+builder.Configuration.AddDeploymentEnvironment();
+DeploymentConfiguration.ValidateRenderDatabase(builder.Configuration);
 builder.Services.AddAntiforgery(options =>
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always);
 // Somente os proxies explicitamente configurados podem informar o protocolo original.
