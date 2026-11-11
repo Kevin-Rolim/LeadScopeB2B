@@ -4,28 +4,45 @@ Aplicação ASP.NET Core MVC (.NET 10), com SQL Server e ADO.NET puro. Organiza 
 
 ## Execução
 
-### Início rápido com Docker (Linux ou WSL)
+### Início rápido com Docker
 
-Com Git e Docker com Docker Compose instalados e o Docker em execução:
+Use uma máquina x86-64 com Git e Docker Compose atualizado. No Linux, inicie o Docker Engine. No Windows, abra o Docker Desktop em modo **Linux containers** e execute o comando diretamente no PowerShell. [Docker Desktop para Windows](https://docs.docker.com/desktop/setup/install/windows-install/) · [Requisitos da imagem do SQL Server](https://learn.microsoft.com/sql/linux/sql-server-linux-docker-container-deployment?view=sql-server-ver16)
 
-```bash
+```sh
 git clone https://github.com/Kevin-Rolim/LeadScopeB2B.git
 cd LeadScopeB2B
+```
+
+**Windows (PowerShell)**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\iniciar.ps1
+```
+
+**Linux ou WSL (Bash)**
+
+```bash
 bash iniciar.sh
 ```
 
-O script gera a senha local do SQL Server no `.env`, inicia o banco, cria as tabelas em uma base vazia e compila a aplicação. Na primeira execução, pede nome, e-mail e senha para criar o administrador. Abra **http://localhost:18080** e entre com esses dados. Não é necessário instalar .NET ou Node.js no computador.
+Os dois scripts geram a senha local do SQL Server no `.env` na primeira execução. O Docker Compose cria a base `LeadScopeB2B`, instala as tabelas, views, procedures, funções, trigger e índices e só então inicia a aplicação. Quando solicitado, informe nome, e-mail e senha do primeiro administrador. Abra **http://localhost:18080** e entre com esses dados.
 
-Nas próximas vezes, execute `bash iniciar.sh` novamente; os dados existentes são preservados. Para parar, use `docker compose stop`. A primeira execução demora mais porque baixa as imagens e compila o sistema. Se uma etapa falhar, corrija o erro indicado e execute o script novamente. Bancos de versões antigas precisam da adequação de perfis descrita abaixo.
+A primeira execução baixa as imagens e compila o projeto. Para iniciar novamente, repita o comando do seu sistema. O banco e as chaves da aplicação ficam em volumes Docker. Preserve o `.env` junto com os volumes.
+
+Com um `.env` que já define `MSSQL_SA_PASSWORD`, também é possível iniciar diretamente com `docker compose up -d --build --wait`. Para configurar o primeiro administrador nesse fluxo, use `docker compose exec leadscope dotnet LeadScopeB2B.dll --criar-admin`.
+
+- Para parar, use `docker compose stop`.
+- Para consultar o banco com uma ferramenta externa, conecte a `localhost,14331`.
+- Para diagnosticar a inicialização, use `docker compose ps -a` e `docker compose logs db-init sqlserver`. O serviço `db-init` termina com código 0 quando conclui o trabalho.
 
 ### Execução sem Docker
 
 1. Instale o SDK .NET 10 e disponibilize SQL Server 2022.
-2. Em uma base nova, execute `Data/LeadScopeB2B.sql`. As definições das 14 tabelas correspondem a `Docs/Database/LeadScopeB2B.sql`. `Docs/Database/InsertCPPA.sql` contém apenas referências de perfis.
-3. Em uma base anterior, execute **somente** `Data/AdequarPerfis.sql` antes de usar esta versão. O script renomeia os conjuntos Admin → Administrador, Gestor → Revisor e Leitura → Usuário, preservando IDs e relacionamentos. Revise a atribuição dos usuários: o antigo Gestor passa a revisar e o antigo Leitura passa a cadastrar.
-4. Configure `ConnectionStrings:DefaultConnection` por user secrets ou `ConnectionStrings__DefaultConnection` no ambiente. Não versione credenciais.
-5. Crie o primeiro administrador com `dotnet run -- --criar-admin`, fornecendo `LEADSCOPE_ADMIN_NOME`, `LEADSCOPE_ADMIN_EMAIL` e `LEADSCOPE_ADMIN_SENHA` no ambiente. Não existe senha padrão; o comando recusa uma segunda inicialização.
-6. Execute `dotnet restore`, `dotnet build -c Release` e `dotnet run`.
+2. Para uma instalação nova, crie a base com `CREATE DATABASE [LeadScopeB2B];` e execute `Data/LeadScopeB2B.sql` conectado a ela.
+3. Execute `Data/ObjetosLeadScopeB2B.sql` para instalar ou atualizar os objetos. Use o SSMS no Windows ou o `sqlcmd` no Windows e no Linux. Para rodar os arquivos com `sqlcmd`, use `-b -f 65001 -d LeadScopeB2B -i CAMINHO_DO_ARQUIVO` junto com as opções de conexão.
+4. Configure `ConnectionStrings:DefaultConnection` por user secrets ou `ConnectionStrings__DefaultConnection` no ambiente. Execute `dotnet run -- --criar-admin` para criar o primeiro administrador e `dotnet run` para iniciar a aplicação.
+
+Em uma base legada que ainda usa os conjuntos `Admin`, `Gestor` e `Leitura`, execute `Data/AdequarPerfis.sql` uma vez e revise as atribuições dos usuários. Os nomes passam a ser `Administrador`, `Revisor` e `Usuário`.
 
 ## Atores
 
@@ -50,9 +67,7 @@ Duplicidades usam CNPJ para empresas e e-mail/LinkedIn para pessoas, inclusive c
 
 ## Docker e recuperação de acesso
 
-Para a implantação privada no Coolify com login por e-mail no Cloudflare Access, consulte [Deploy no Coolify](Docs/DeployCoolify.md). A composição de produção é independente da composição local abaixo.
-
-Defina `MSSQL_SA_PASSWORD` no `.env` privado e execute `docker compose up -d --build`. Inicialize o banco conforme acima. Aplicação: `http://localhost:18080`; SQL: `localhost,14331`. Volumes de banco e chaves são mantidos. O volume histórico `integracoes_data` permanece declarado, sem montagem ou uso pela aplicação, para preservar instalações anteriores. Não execute `down -v` se quiser preservar dados.
+Para a implantação privada no Coolify com login por e-mail no Cloudflare Access, use a composição de produção descrita em [Deploy no Coolify](Docs/DeployCoolify.md).
 
 A recuperação de acesso é opcional e usa SMTP ou a API do Resend, independente das integrações de dados removidas. Configure `RecuperacaoAcesso:Habilitado`, `RecuperacaoAcesso:UrlPublica` e `EmailSmtp` no ambiente. Sem provedor de e-mail configurado, login, cadastro e administração continuam disponíveis. Consulte [Contas](Docs/Contas.md).
 

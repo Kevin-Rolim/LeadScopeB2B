@@ -13,5 +13,6 @@ public interface IUsuarioRepository
     Task CadastrarPublicoAsync(Usuarios usuario);
     Task<Usuarios> AtualizarPerfilAsync(int id, string nome, string email, string senhaEsperada);
     Task<bool> AtualizarSenhaAsync(int id, string email, string senhaEsperada, string novaSenha, string evento);
+    Task<bool> AdministradorExisteAsync();
     Task CriarAdministradorInicialAsync(Usuarios usuario);
 }

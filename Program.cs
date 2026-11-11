@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text;
 using System.Threading.RateLimiting;
 using LeadScopeB2B.Data;
 using LeadScopeB2B.Integration;
@@ -110,11 +112,41 @@ var app = builder.Build();
 if (args.Contains("--criar-admin"))
 {
     using var scope = app.Services.CreateScope();
-    await scope.ServiceProvider.GetRequiredService<UsuarioService>().CriarAdministradorInicialAsync(
-        Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_NOME") ?? "",
-        Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_EMAIL") ?? "",
-        Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_SENHA") ?? "");
-    Console.WriteLine("Administrador inicial criado.");
+    var nome = Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_NOME");
+    var email = Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_EMAIL");
+    var senha = Environment.GetEnvironmentVariable("LEADSCOPE_ADMIN_SENHA");
+    if (nome is null && email is null && senha is null)
+    {
+        if (await scope.ServiceProvider.GetRequiredService<IUsuarioRepository>().AdministradorExisteAsync())
+            return;
+
+        if (Console.IsInputRedirected)
+        {
+            Console.Error.WriteLine("Use um terminal interativo ou configure LEADSCOPE_ADMIN_NOME, LEADSCOPE_ADMIN_EMAIL e LEADSCOPE_ADMIN_SENHA.");
+            Environment.ExitCode = 1;
+            return;
+        }
+
+        Console.WriteLine("Crie o primeiro administrador.");
+        Console.Write("Nome: ");
+        nome = Console.ReadLine();
+        Console.Write("E-mail: ");
+        email = Console.ReadLine();
+        Console.Write("Senha: ");
+        senha = LerSenha();
+    }
+
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<UsuarioService>()
+            .CriarAdministradorInicialAsync(nome ?? "", email ?? "", senha ?? "");
+        Console.WriteLine("Administrador inicial criado.");
+    }
+    catch (Exception ex) when (ex is ValidationException or ConflitoException)
+    {
+        Console.Error.WriteLine(ex.Message);
+        Environment.ExitCode = 1;
+    }
     return;
 }
 app.UseForwardedHeaders();
@@ -129,5 +161,23 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 app.Run();
+
+static string LerSenha()
+{
+    var senha = new StringBuilder();
+    while (true)
+    {
+        var tecla = Console.ReadKey(intercept: true);
+        if (tecla.Key == ConsoleKey.Enter)
+        {
+            Console.WriteLine();
+            return senha.ToString();
+        }
+        if (tecla.Key == ConsoleKey.Backspace && senha.Length > 0)
+            senha.Length--;
+        else if (!char.IsControl(tecla.KeyChar))
+            senha.Append(tecla.KeyChar);
+    }
+}
 
 public partial class Program;

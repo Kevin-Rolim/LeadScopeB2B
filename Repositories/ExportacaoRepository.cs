@@ -11,18 +11,17 @@ public class ExportacaoRepository(SqlLeadScopeB2B sql)
         var result = new List<LeadExportado>();
         foreach (var (pessoa, empresa) in pares)
         {
-            var rows = await SqlLeadScopeB2B.ConsultarAsync(conn, tx, """
-                SELECT p.Id AS PessoaId,e.Id AS EmpresaId,p.Nome,e.RazaoSocial,p.Email,p.Telefone,l.Cargo
-                FROM dbo.PessoasEmpresas l WITH (UPDLOCK,HOLDLOCK) JOIN dbo.Pessoas p ON p.Id=l.PessoaId JOIN dbo.Empresas e ON e.Id=l.EmpresaId
-                WHERE l.PessoaId=@pessoa AND l.EmpresaId=@empresa AND l.StatusLead='QUALIFICADO' AND l.StatusVinculo='ATIVO'
-                AND p.DataExclusao IS NULL AND p.DataBloqueio IS NULL AND p.Status='VALIDADO' AND e.Status='VALIDADA'
-                """, r => new LeadExportado(r.Int("PessoaId"), r.Int("EmpresaId"), r.Text("Nome")!, r.Text("RazaoSocial")!, r.Text("Email"), r.Text("Telefone"), r.Text("Cargo")), Int("@pessoa", pessoa), Int("@empresa", empresa));
+            var rows = await SqlLeadScopeB2B.ConsultarAsync(conn, tx,
+                "SELECT PessoaId,EmpresaId,Nome,RazaoSocial,Email,Telefone,Cargo FROM dbo.fn_LeadExportavel(@pessoa,@empresa)",
+                r => new LeadExportado(r.Int("PessoaId"), r.Int("EmpresaId"), r.Text("Nome")!, r.Text("RazaoSocial")!, r.Text("Email"), r.Text("Telefone"), r.Text("Cargo")), Int("@pessoa", pessoa), Int("@empresa", empresa));
             if (rows.Count != 1) throw new ConflitoException("Exporte somente leads qualificados com vínculo ativo, pessoa validada e desbloqueada e empresa validada.");
             result.Add(rows[0]);
         }
-        var id = (await SqlLeadScopeB2B.ConsultarAsync(conn, tx, "INSERT INTO dbo.Exportacoes (QtdItens,UsuarioId) OUTPUT INSERTED.Id VALUES (@quantidade,@usuario)", r => r.GetInt32(0), Int("@quantidade", result.Count), Int("@usuario", usuarioId))).Single();
+        var id = await SqlLeadScopeB2B.ExecutarProcedureComSaidaAsync(conn, tx, "dbo.usp_ExportacoesAdd", "@NovoId",
+            Int("@QtdItens", result.Count), Int("@UsuarioId", usuarioId));
         foreach (var (pessoa, empresa) in pares)
-            await SqlLeadScopeB2B.ExecutarAsync(conn, tx, "INSERT INTO dbo.ExportacoesPessoasEmpresas (ExportacoesId,PessoaId,EmpresaId) VALUES (@id,@pessoa,@empresa)", Int("@id", id), Int("@pessoa", pessoa), Int("@empresa", empresa));
+            await SqlLeadScopeB2B.ExecutarProcedureAsync(conn, tx, "dbo.usp_ExportacoesPessoasEmpresasAdd",
+                Int("@ExportacoesId", id), Int("@PessoaId", pessoa), Int("@EmpresaId", empresa));
         await AuditoriaRepository.RegistrarAsync(conn, tx, usuarioId, "EXPORTACAO", $"Exportação {id}: {result.Count} leads em CSV.");
         return result;
     });

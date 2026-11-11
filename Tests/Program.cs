@@ -41,6 +41,13 @@ try
         await new SqlCommand(definitions,conn).ExecuteNonQueryAsync();
         var reference = File.ReadAllText(Path.Combine(root,"Docs/Database/InsertCPPA.sql"));
         await new SqlCommand(reference[reference.IndexOf("SET XACT_ABORT",StringComparison.Ordinal)..],conn).ExecuteNonQueryAsync();
+        var objetos = File.ReadAllText(Path.Combine(root, "Data/ObjetosLeadScopeB2B.sql"));
+        // O primeiro lote contém USE. A conexão do teste já seleciona sua base temporária.
+        foreach (var lote in Regex.Split(objetos, @"^GO[ \t]*\r?$", RegexOptions.Multiline).Skip(1))
+        {
+            if (!string.IsNullOrWhiteSpace(lote))
+                await new SqlCommand(lote, conn).ExecuteNonQueryAsync();
+        }
         Check(Convert.ToInt32(await new SqlCommand("SELECT COUNT(*) FROM sys.tables WHERE is_ms_shipped=0",conn).ExecuteScalarAsync())==14,"14 tabelas originais no SQL Server");
     }
     var sql = new SqlLeadScopeB2B(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?> { ["ConnectionStrings:DefaultConnection"]=connection }).Build());

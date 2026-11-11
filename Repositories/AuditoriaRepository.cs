@@ -6,8 +6,8 @@ namespace LeadScopeB2B.Repositories;
 
 public class AuditoriaRepository(SqlLeadScopeB2B sql)
 {
-    internal static Task<int> RegistrarAsync(SqlConnection conn, SqlTransaction tx, int usuarioId, string evento, string descricao) =>
-        SqlLeadScopeB2B.ExecutarAsync(conn, tx, "INSERT INTO dbo.Logs (TipoEvento,DescricaoEvento,UsuarioId) VALUES (@evento,@descricao,@usuario)", Text("@evento", evento, 50), Text("@descricao", descricao), Int("@usuario", usuarioId));
-    public Task RegistrarAsync(int usuarioId, string evento, string descricao) => sql.ExecutarAsync("INSERT INTO dbo.Logs (TipoEvento,DescricaoEvento,UsuarioId) VALUES (@evento,@descricao,@usuario)", Text("@evento", evento, 50), Text("@descricao", descricao), Int("@usuario", usuarioId));
-    public Task<List<Logs>> ListarAsync() => sql.ConsultarAsync("SELECT TOP (200) l.*,u.Nome AS UsuarioNome FROM dbo.Logs l JOIN dbo.Usuarios u ON u.Id=l.UsuarioId ORDER BY l.DataHora DESC,l.Id DESC", r => new Logs { Id = r.Int("Id"), TipoEvento = r.Text("TipoEvento")!, DescricaoEvento = r.Text("DescricaoEvento"), DataHora = r.Date("DataHora"), UsuarioId = r.Int("UsuarioId"), Usuarios = new Usuarios { Nome = r.Text("UsuarioNome")! } });
+    internal static Task RegistrarAsync(SqlConnection conn, SqlTransaction tx, int usuarioId, string evento, string descricao) =>
+        SqlLeadScopeB2B.ExecutarProcedureAsync(conn, tx, "dbo.usp_LogsAdd", Text("@TipoEvento", evento, 50), Text("@DescricaoEvento", descricao), Int("@UsuarioId", usuarioId));
+    public Task RegistrarAsync(int usuarioId, string evento, string descricao) => sql.ExecutarProcedureAsync("dbo.usp_LogsAdd", Text("@TipoEvento", evento, 50), Text("@DescricaoEvento", descricao), Int("@UsuarioId", usuarioId));
+    public Task<List<Logs>> ListarAsync() => sql.ConsultarAsync("SELECT TOP (200) Id,TipoEvento,DescricaoEvento,DataHora,UsuarioId,UsuarioNome FROM dbo.vw_LogsUsuarios ORDER BY DataHora DESC,Id DESC", r => new Logs { Id = r.Int("Id"), TipoEvento = r.Text("TipoEvento")!, DescricaoEvento = r.Text("DescricaoEvento"), DataHora = r.Date("DataHora"), UsuarioId = r.Int("UsuarioId"), Usuarios = new Usuarios { Nome = r.Text("UsuarioNome")! } });
 }
